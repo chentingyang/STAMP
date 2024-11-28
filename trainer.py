@@ -170,7 +170,7 @@ class Trainer(object):
             self.ae_optimizer.zero_grad()
             output1, target1, = self.ae_model_batch(batch, training=True)
             ae_loss = self.ae_loss(output1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
-                                   target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
+                                target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
             ae_loss.backward()
             self.ae_optimizer.step()
 
@@ -197,7 +197,7 @@ class Trainer(object):
             self.ae_optimizer.zero_grad()
             output1, target1, = self.ae_model_batch(batch, training=True)
             ae_loss = self.ae_loss(output1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
-                                   target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
+                                target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
 
             _,_, generate_batch = self.pred_model_batch(batch, training=True, mas=mas)
             if self.args.real_value:
@@ -226,7 +226,7 @@ class Trainer(object):
         loss2 = np.array(loss2_list).mean()
         self.logger.info(
             '**********Train Epoch {}: averaged Loss1: {:.6f}, Loss2: {:.6f}, train_time: {:.3f}s'.format(epoch, loss1, loss2,
-                                                                                          end_time - start_time))
+                                                                                        end_time - start_time))
         return loss1, loss2
 
     def train(self):
@@ -252,11 +252,13 @@ class Trainer(object):
             ## val
             val_pred_loss, val_ae_loss, val_adv_loss, val_loss1, val_loss2 = self.val_epoch(epoch, val_dataloader)
             val_result = {"val_pred_loss":val_pred_loss, "val_ae_loss":val_ae_loss, "val_adv_loss":val_adv_loss,
-                          "val_loss1":val_loss1, "val_loss2":val_loss2}
+                        "val_loss1":val_loss1, "val_loss2":val_loss2}
             val_history.append(val_result)
             
             train_epoch_loss = train_loss1 + train_loss2
             val_epoch_loss = val_loss1 + val_loss2
+            
+            # early_stop:
             # if train_epoch_loss > 1e6:
             #     self.logger.warning('Gradient explosion detected. Ending...')
             #     break
@@ -291,62 +293,6 @@ class Trainer(object):
         self.logger.info("Saving current best model to " + self.best_path)
         return train_history, val_history
     
-    def train_transfer(self):#迁移学习训练
-        best_model = None
-        best_loss = float('inf')
-        not_improved_count = 0
-
-        train_history = []
-        val_history = []
-        start_time = time.time()
-        for epoch in range(1, self.args.transfer_epochs + 1):
-            ## train
-            train_loss1, train_loss2 = self.train_epoch(epoch)
-            train_result = {'train_loss1': train_loss1, 'train_loss2': train_loss2}
-            train_history.append(train_result)
-
-            if self.val_loader == None:
-                val_dataloader = self.test_loader
-            else:
-                val_dataloader = self.val_loader
-
-            ## val
-            val_pred_loss, val_ae_loss, val_adv_loss, val_loss1, val_loss2 = self.val_epoch(epoch, val_dataloader)
-            val_result = {"val_pred_loss":val_pred_loss, "val_ae_loss":val_ae_loss, "val_adv_loss":val_adv_loss,
-                          "val_loss1":val_loss1, "val_loss2":val_loss2}
-            val_history.append(val_result)
-
-            # if train_epoch_loss > 1e6:
-            #     self.logger.warning('Gradient explosion detected. Ending...')
-            #     break
-
-            ### early_stop
-            # if val_epoch_loss < best_loss:
-            #     best_loss = val_epoch_loss
-            #     not_improved_count = 0
-            #     best_state = True
-            # else:
-            #     not_improved_count += 1
-            #     best_state = False
-            # if self.args.early_stop:
-            #     if not_improved_count == self.args.early_stop_patience:
-            #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
-            #                         "Training stops.".format(self.args.early_stop_patience))
-            #         break
-            # # save the best state
-            # if best_state == True:
-            #     self.logger.info('*********************************Current best model saved!')
-            #     best_model = copy.deepcopy(self.model.state_dict())
-
-        training_time = time.time() - start_time
-        self.logger.info("Total training time: {:.4f}min".format((training_time / 60)))
-        # self.logger.info("Total training time: {:.4f}min, best loss: {:.6f}".format((training_time / 60), best_loss))
-
-
-        #save the best model to file
-        self.save_checkpoint_transfer()
-        self.logger.info("Saving current best transfer model to " + self.transfer_path)
-        return train_history, val_history, self.transfer_path
 
     def save_checkpoint(self):
         state = {
@@ -374,299 +320,6 @@ class Trainer(object):
         torch.save(state, self.transfer_path)
         self.logger.info("Saving current best transfer model to " + self.transfer_path)
         
-class TransferTrainer(object):
-    def __init__(self, pred_model, pred_loss, pred_optimizer, ae_model, ae_loss, ae_optimizer, train_loader, val_loader, test_loader, args, scaler, lr_scheduler=None):
-        super(TransferTrainer, self).__init__()
-        self.pred_model = pred_model
-        self.pred_loss = pred_loss
-        self.pred_optimizer = pred_optimizer
-
-        self.ae_model = ae_model
-        self.ae_loss = ae_loss
-        self.ae_optimizer = ae_optimizer
-
-        self.train_loader = train_loader
-        self.val_loader = val_loader
-        self.test_loader = test_loader
-        self.args = args
-        self.scaler = scaler
-        self.lr_scheduler = lr_scheduler
-        self.train_per_epoch = len(train_loader)
-        if val_loader != None:
-            self.val_per_epoch = len(val_loader)
-
-        self.best_path = os.path.join(self.args.log_dir, 'best_model_' + self.args.data + "_" + self.args.model + '.pth')
-        #self.best_path = os.path.join(self.args.log_dir, 'best_model_unsup_weights_init_' + self.args.data + "_" + self.args.model + '.pth') #用该版本读取无监督节点权重
-        self.transfer_path = os.path.join(self.args.log_dir_transfer, 'best_model_' + self.args.data + "_" + self.args.model + '.pth')
-        self.loss_figure_path = os.path.join(self.args.log_dir, 'loss.png')
-
-        ## log
-        if os.path.isdir(args.log_dir) == False and not args.debug:
-            os.makedirs(args.log_dir, exist_ok=True)
-        self.logger = get_logger(args.log_dir, name=args.model, debug=args.debug, data = args.data)
-        #self.logger = get_logger(args.log_dir, name=args.model + '_unsup', debug=args.debug, data = args.data)
-        self.logger.info('Experiment log path in: {}'.format(args.log_dir))
-
-        self.ae_channels = self.args.window_size*self.args.nnodes*self.args.in_channels
-
-    def pred_model_batch(self, batch, training=True, mas = None):
-        self.pred_model.train(training)
-        x, target = batch[:, :self.args.window_size - self.args.n_pred, ...], batch[:, -self.args.n_pred:, ...]
-        # if self.args.is_mas:
-        #     mas = mas[:, :self.args.window_size - self.args.n_pred, ...]
-        output = self.pred_model(x, mas=mas)
-
-        if self.args.real_value:
-            #     outputs = self.scaler.inverse_transform(outputs)
-            target = self.scaler.inverse_transform(target.reshape(-1, self.args.n_pred , self.args.nnodes * self.args.out_channels).detach().cpu().numpy())
-            target = torch.from_numpy(target).float().view(-1, self.args.n_pred, self.args.nnodes, self.args.out_channels).to(batch.device)
-
-            x = self.scaler.inverse_transform(x.reshape(-1, (self.args.window_size - self.args.n_pred) , self.args.nnodes * self.args.out_channels).detach().cpu().numpy())
-            x = torch.from_numpy(x).float().view(-1, self.args.window_size - self.args.n_pred, self.args.nnodes, self.args.out_channels).to(batch.device)
-
-        generate_batch = torch.cat([x, output], dim=1)
-        return output, target, generate_batch
-
-    def ae_model_batch(self, batch, training = True):
-        self.ae_model.train(training)
-
-        ## [B, T, N, C] --> [B, T * N * C]
-        batch = batch.reshape(-1, self.ae_channels)
-
-        output = self.ae_model(batch)
-
-        if self.args.real_value:
-            #     outputs = self.scaler.inverse_transform(outputs)
-            batch = self.scaler.inverse_transform(batch.reshape(-1, self.args.window_size, self.args.nnodes * self.args.in_channels).detach().cpu().numpy())
-            batch = torch.from_numpy(batch).view(-1, self.ae_channels).float().to(output.device)
-
-        return output, batch
-
-    def val_epoch(self, epoch, val_dataloader):
-        self.pred_model.eval()
-        self.ae_model.eval()
-
-        total_val_pred_loss_list = []
-        total_val_ae_loss_list = []
-        total_val_adv_loss_list = []
-
-        loss1_list = []
-        loss2_list = []
-        start_val = time.time()
-
-
-        start_epoch = 0
-        with torch.no_grad():
-            for batch_m in val_dataloader:
-                if self.args.is_mas:
-                    batch,mas = batch_m
-                    mas = mas[:, :self.args.window_size - self.args.n_pred, ...]
-                else:
-                    batch, mas = batch_m[0], None
-                ## batch: [B,T,N,C]
-
-                ## eval predModel
-                output, target, generate_batch = self.pred_model_batch(batch, training=False, mas = mas)
-                pred_loss = self.pred_loss(output, target)
-                if not torch.isnan(pred_loss):
-                    total_val_pred_loss_list.append(pred_loss.item())
-
-                ## eval AE
-                output, target = self.ae_model_batch(batch, training=False)
-                ae_loss = self.ae_loss(output.reshape(-1,self.args.window_size,self.args.nnodes,self.args.out_channels), target.reshape(-1,self.args.window_size,self.args.nnodes,self.args.out_channels))
-                if not torch.isnan(ae_loss):
-                    total_val_ae_loss_list .append(ae_loss.item())
-
-                if self.args.real_value:
-                    generate_batch = self.scaler.transform(generate_batch.reshape(-1, self.args.window_size, self.args.nnodes * self.args.out_channels).detach().cpu().numpy())
-                    generate_batch = torch.from_numpy(generate_batch).float().view(-1, self.args.window_size, self.args.nnodes, self.args.out_channels).to(batch.device)
-
-                ## eval adv
-                output2, target2 = self.ae_model_batch(generate_batch, training=False)
-                adv_loss = self.ae_loss(output2.reshape(-1,self.args.window_size,self.args.nnodes,self.args.out_channels), target2.reshape(-1,self.args.window_size,self.args.nnodes,self.args.out_channels))
-                if not torch.isnan(ae_loss):
-                    total_val_adv_loss_list.append(adv_loss.item())
-
-                loss1 = 5/(epoch-start_epoch) *pred_loss.item() + (1- 1/(epoch - start_epoch))*adv_loss.item()
-                loss2 = 3/(epoch-start_epoch) *ae_loss.item() - (1- 1/(epoch - start_epoch))*adv_loss.item()
-
-                loss1_list.append(loss1)
-                loss2_list.append(loss2)
-        val_pred_loss = np.array(total_val_pred_loss_list).mean()
-        val_ae_loss = np.array(total_val_ae_loss_list).mean()
-        val_adv_loss = np.array(total_val_adv_loss_list).mean()
-        end_val = time.time()
-
-        loss1 = np.array(loss1_list).mean()
-        loss2 = np.array(loss2_list).mean()
-
-        self.logger.info(
-            '**********Val Epoch {}: average Loos1: {:.6f}, average Loss2: {:.6f}, while average predModel Loss: {:.6f}, average AE Loss: {:.6f}, average AE Generate Loss: {:.6f}, inference time: {:.3f}s'.
-            format(epoch, loss1, loss2, val_pred_loss, val_ae_loss, val_adv_loss, end_val - start_val))
-
-        return val_pred_loss, val_ae_loss, val_adv_loss, loss1, loss2
-
-    def train_epoch(self, epoch, option):
-        self.pred_model.train()
-        self.ae_model.train()
-
-        loss1_list = []
-        loss2_list = []
-        start_time = time.time()
-
-        start_epoch = 0
-        
-        for batch_m in self.train_loader:
-            #data and target shape: B, T, N, F;
-            # output shape: B, T, N, F
-            if self.args.is_mas:
-                batch, mas = batch_m
-                mas = mas[:, :self.args.window_size - self.args.n_pred, ...]
-            else:
-                batch, mas = batch_m[0], None
-
-            if option == 4:
-                ## train predModel
-                self.pred_optimizer.zero_grad()
-                output, target, generate_batch = self.pred_model_batch(batch, training=True, mas=mas)
-                pred_loss = self.pred_loss(output, target)
-                pred_loss.backward()
-                self.pred_optimizer.step()
-
-            elif option == 3:
-                ## train AE
-                self.ae_optimizer.zero_grad()
-                output1, target1, = self.ae_model_batch(batch, training=True)
-                ae_loss = self.ae_loss(output1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
-                                    target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
-                ae_loss.backward()
-                self.ae_optimizer.step()
-
-            # ### 对抗训练  loss1
-            self.pred_optimizer.zero_grad()
-            output, target, generate_batch = self.pred_model_batch(batch, training=True, mas=mas)
-            pred_loss = self.pred_loss(output, target)
-
-            if self.args.real_value:
-                generate_batch = self.scaler.transform(generate_batch.reshape(-1,self.args.window_size , self.args.nnodes * self.args.out_channels).detach().cpu().numpy())
-                generate_batch = torch.from_numpy(generate_batch).float().view(-1, self.args.window_size, self.args.nnodes, self.args.out_channels).to(batch.device)
-
-            output1, batch1 = self.ae_model_batch(generate_batch, training=True)
-            adv_loss = self.ae_loss(output1.reshape(-1, self.args.window_size,self.args.nnodes,self.args.out_channels), batch1.reshape(-1, self.args.window_size,self.args.nnodes,self.args.out_channels))
-
-            if epoch > start_epoch:
-                loss1 = 5/(epoch-start_epoch) *pred_loss + (1- 1/(epoch-start_epoch))*adv_loss
-            else:
-                loss1 = 5 / (epoch ) * pred_loss + (1 - 1 / (epoch )) * adv_loss
-            loss1.backward()
-            self.pred_optimizer.step()
-
-            ### 对抗训练  loss2
-            self.ae_optimizer.zero_grad()
-            output1, target1, = self.ae_model_batch(batch, training=True)
-            ae_loss = self.ae_loss(output1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
-                                   target1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
-
-            _,_, generate_batch = self.pred_model_batch(batch, training=True, mas=mas)
-            if self.args.real_value:
-                generate_batch = self.scaler.transform(generate_batch.reshape(-1, self.args.window_size,
-                                                                              self.args.nnodes * self.args.out_channels).detach().cpu().numpy())
-                generate_batch = torch.from_numpy(generate_batch).float().view(-1, self.args.window_size,self.args.nnodes, self.args.out_channels).to(batch.device)
-            output2, batch2 = self.ae_model_batch(generate_batch, training=True)
-            adv_loss = self.ae_loss(
-                output2.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
-                batch2.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels))
-
-            if epoch > start_epoch:
-                loss2 = 3 / (epoch - start_epoch) * ae_loss - (1 - 1 / (epoch - start_epoch)) * adv_loss
-            else:
-                loss2 = 3 / (epoch ) * ae_loss - (1 - 1 / (epoch )) * adv_loss
-            loss2.backward()
-            self.ae_optimizer.step()
-
-
-            loss1_list.append(loss1.item())
-            loss2_list.append(loss2.item())
-
-        end_time = time.time()
-
-        loss1 = np.array(loss1_list).mean()
-        loss2 = np.array(loss2_list).mean()
-        self.logger.info(
-            '**********Train Epoch {}: averaged Loss1: {:.6f}, Loss2: {:.6f}, train_time: {:.3f}s'.format(epoch, loss1, loss2,
-                                                                                          end_time - start_time))
-        return loss1, loss2
-
-    def train(self, option):
-        best_model = None
-        best_loss = float('inf')
-        not_improved_count = 0
-
-        train_history = []
-        val_history = []
-        start_time = time.time()
-        
-        for epoch in range(1, self.args.transfer_epochs + 1):
-            ## train
-            train_loss1, train_loss2 = self.train_epoch(epoch, option)
-            train_result = {'train_loss1': train_loss1, 'train_loss2': train_loss2}
-            train_history.append(train_result)
-
-            if self.val_loader == None:
-                val_dataloader = self.test_loader
-            else:
-                val_dataloader = self.val_loader
-
-            ## val
-            val_pred_loss, val_ae_loss, val_adv_loss, val_loss1, val_loss2 = self.val_epoch(epoch, val_dataloader)
-            val_result = {"val_pred_loss":val_pred_loss, "val_ae_loss":val_ae_loss, "val_adv_loss":val_adv_loss,
-                          "val_loss1":val_loss1, "val_loss2":val_loss2}
-            val_history.append(val_result)
-
-            # if train_epoch_loss > 1e6:
-            #     self.logger.warning('Gradient explosion detected. Ending...')
-            #     break
-
-            ### early_stop
-            # if val_epoch_loss < best_loss:
-            #     best_loss = val_epoch_loss
-            #     not_improved_count = 0
-            #     best_state = True
-            # else:
-            #     not_improved_count += 1
-            #     best_state = False
-            # if self.args.early_stop:
-            #     if not_improved_count == self.args.early_stop_patience:
-            #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
-            #                         "Training stops.".format(self.args.early_stop_patience))
-            #         break
-            # # save the best state
-            # if best_state == True:
-            #     self.logger.info('*********************************Current best model saved!')
-            #     best_model = copy.deepcopy(self.model.state_dict())
-
-        training_time = time.time() - start_time
-        self.logger.info("Total training time: {:.4f}min".format((training_time / 60)))
-        # self.logger.info("Total training time: {:.4f}min, best loss: {:.6f}".format((training_time / 60), best_loss))
-
-
-        #save the best model to file
-        self.save_checkpoint_transfer()
-        self.logger.info("Saving current best transfer model to " + self.transfer_path)
-        return train_history, val_history
-    
-        
-    def save_checkpoint_transfer(self):
-        state = {
-            'pred_state_dict': self.pred_model.state_dict(),
-            'pred_optimizer': self.pred_optimizer.state_dict(),
-            'ae_state_dict': self.ae_model.state_dict(),
-            'ae_optimizer': self.ae_optimizer.state_dict(),
-
-            'config': self.args
-        }
-        torch.save(state, self.transfer_path)
-        self.logger.info("Saving current best transfer model to " + self.transfer_path)
 
 
 class Tester(object):
