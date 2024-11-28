@@ -6,7 +6,7 @@ import numpy as np
 
 from lib.evaluate import *
 
-parser = argparse.ArgumentParser(description='PyTorch RNN Prediction Model on Time-series Dataset')
+parser = argparse.ArgumentParser(description='PyTorch Prediction Model on Time-series Dataset')
 parser.add_argument('--data', type=str, default='SWaT',
                     help='type of the dataset (SWaT, WADI, ...)')
 parser.add_argument('--filename', type=str, default='SWaT_Dataset_Normal_v1.csv',
@@ -17,8 +17,8 @@ parser.add_argument('--log_dir', default="expe", type=str)
 parser.add_argument('--model', default="v2_", type=str)## ourModel
 parser.add_argument('--pred_model', default="gat", type=str)
 parser.add_argument('--gpu_id', default="0", type=str)
-parser.add_argument('--temp_method', default="Conv", type=str)
-parser.add_argument('--log_dir_transfer', default="expe/transfer_learning", type=str)#迁移学习模型存放地址
+parser.add_argument('--temp_method', default="SAttn", type=str)
+
 
 ### graph constructure
 parser.add_argument('--nnodes', type=int, default=45, help='number of nodes')

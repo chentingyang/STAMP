@@ -7,6 +7,15 @@ from torch.nn import init
 import numbers
 import math
 
+'''
+    "temp_method" is the parameter that determines which method is adopted in the spatialTemporalLearningLayer
+    "temp_method" contains:
+    "Conv": Conv2D layers + Graph Attention
+    "Attn": Conv2D layers + Temporal-MHA (from 2 views) + Graph Attention
+    "SAttn": Conv2D layers + Temporal-MHA + Spatial-MHA + Graph Attention
+    where we adopt "SAttn" in STAMP
+'''
+
 
 class conv2D(nn.Module):
     '''
@@ -41,19 +50,6 @@ class linear(nn.Module):
 
     def forward(self, x):
         return self.mlp(x)
-
-
-class nconv(nn.Module):
-    '''
-    GCN
-    '''
-
-    def __init__(self):
-        super(nconv, self).__init__()
-
-    def forward(self, x, A):
-        x = torch.einsum('ncwl,vw->ncvl', (x, A))
-        return x.contiguous()
 
 
 class graph_constructor(nn.Module):
@@ -129,56 +125,6 @@ class nodeEmbedding(nn.Module):
         return emb1, emb2
 
 
-class graph_constructor2(nn.Module):
-    def __init__(self, nnodes, k, dim, device, alpha=3, static_feat=None):
-        super(graph_constructor2, self).__init__()
-        self.nnodes = nnodes
-        if static_feat is not None:
-            xd = static_feat.shape[1]
-            self.lin1 = nn.Linear(xd, dim)
-            self.lin2 = nn.Linear(xd, dim)
-        else:
-            self.lin1 = nn.Linear(dim, dim)
-            self.lin2 = nn.Linear(dim, dim)
-
-        self.device = device
-        self.k = k
-        self.dim = dim
-        self.alpha = alpha
-        self.static_feat = static_feat
-
-    def forward(self, idx, emb1=None, emb2=None):
-        '''
-        :param idx: self.idx = torch.arange(self.num_nodes).to(device)
-        :return:
-        '''
-        if self.static_feat is None:
-            nodevec1 = emb1
-            nodevec2 = emb2
-        else:
-            nodevec1 = self.static_feat[idx, :]
-            nodevec2 = nodevec1
-
-        a = torch.mm(self.lin1(nodevec1), nodevec2.transpose(1, 0)) - torch.mm(self.lin2(nodevec2), nodevec1.transpose(1, 0))
-        adj = F.softmax(torch.tanh(self.alpha * a))
-        mask = torch.zeros(idx.size(0), idx.size(0)).to(self.device)
-        mask.fill_(float('0'))
-        s1, t1 = (adj + torch.rand_like(adj) * 0.01).topk(self.k, 1)
-        mask.scatter_(1, t1, s1.fill_(1))
-        adj = adj * mask
-        return adj
-
-    def fullA(self, idx, emb1=None, emb2=None):
-        if self.static_feat is None:
-            nodevec1 = emb1
-            nodevec2 = emb2
-        else:
-            nodevec1 = self.static_feat[idx, :]
-            nodevec2 = nodevec1
-
-        a = torch.mm(self.lin1(nodevec1), nodevec2.transpose(1, 0)) - torch.mm(self.lin2(nodevec2), nodevec1.transpose(1, 0))
-        adj = F.softmax(torch.tanh(self.alpha * a))
-        return adj
 
 
 class Spatial_Attention_layer(nn.Module):
@@ -205,33 +151,6 @@ class Spatial_Attention_layer(nn.Module):
 
         return score.reshape((batch_size, num_of_timesteps, num_of_vertices, num_of_vertices))
 
-
-class spatialAttentionGCN(nn.Module):
-    def __init__(self, in_channels, out_channels, dropout=.0):
-        super(spatialAttentionGCN, self).__init__()
-        # self.adj = adj  # (N, N)
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.Theta = nn.Linear(in_channels, out_channels, bias=False)
-        self.SAt = Spatial_Attention_layer(dropout=dropout)
-
-    def forward(self, x, adj):
-        '''
-        spatial graph convolution operation
-        :param x: (batch_size, T, N,  F_in)
-        :return: (batch_size, T, N, F_out)
-        '''
-        batch_size, num_of_timesteps, num_of_vertices, in_channels = x.shape
-
-        spatial_attention = self.SAt(x)  # (batch, T, N, N)
-
-        x = x.reshape((-1, num_of_vertices, in_channels))  # (b*t,n,f_in)
-
-        spatial_attention = spatial_attention.reshape((-1, num_of_vertices, num_of_vertices))  # (b*T, n, n)
-
-        # (b*t, n, f_in)->(b*t, n, f_out)->(b,t,n,f_out)
-        return F.relu(self.Theta(torch.matmul(adj.mul(spatial_attention), x)).reshape(
-            (batch_size, num_of_timesteps, num_of_vertices, self.out_channels)))
 
 
 class GATLayer(nn.Module):
@@ -441,13 +360,13 @@ class TransformerEncoder(nn.Module):
         self.embed_size = embed_size
         self.device = device
         
-        # 多头自注意力机制
+        # Multi-head Self Attention
         self.self_attn = nn.ModuleList([
             nn.MultiheadAttention(embed_dim=embed_size, num_heads=num_heads, dropout=self.dropout_rate)
             for _ in range(num_layers)
         ])
         
-        # 位置前馈网络
+        # FFN
         if self.is_conv:
             self.position_ffwd = nn.ModuleList([
                 nn.Sequential(
@@ -470,23 +389,21 @@ class TransformerEncoder(nn.Module):
         
                 
     def forward(self, x, mask=None):
-        attn_mask = mask # 这里可以根据需要实现遮罩机制，用于屏蔽自注意力中的某些位置
-        
+        attn_mask = mask 
         
         out = nn.Linear(x.shape[2], self.embed_size, device=self.device)(x) # (bs, seq_len, embed_size)
-        #out = x.reshape(-1, x.shape[1], 64)
-        # 逐层处理输入
+
         for i in range(self.num_layers):
-            # 残差连接
+            
             init_out = out
-            # 自注意力层
+
             out, _ = self.self_attn[i](init_out, init_out, init_out, attn_mask=attn_mask, key_padding_mask=mask)
             
             out = nn.Dropout(self.dropout_rate)(out) + init_out
             
             out = nn.LayerNorm(self.embed_size, device=self.device)(out)
             
-            # 位置前馈网络
+            # FFN
             if self.is_conv:
                 ffwd_out = out.permute(0,2,1) # (bs, embed_size, seq_len)
                 ffwd_out = self.position_ffwd[i](ffwd_out)
@@ -575,14 +492,14 @@ class spatialTemporalLearningLayer(nn.Module):
         x_input = self.residual_conv2D(x)
         
         if self.temp_method == "Conv":
-            temporal_out = self.temp_conv(x) #(B, T-k+1, N, in_channels)
+            temporal_out = self.temp_conv(x) # (B, T-k+1, N, in_channels)
             
         elif self.temp_method == "Attn":
             seq_len = x.shape[1]
             num_nodes = x.shape[2]
             in_channels = x.shape[3]
-            temporal_in = x.reshape(-1, seq_len, num_nodes * in_channels)#(B, T, N*C)
-            attn_out = self.temp_attn(temporal_in) #(B, T, embed_size)
+            temporal_in = x.reshape(-1, seq_len, num_nodes * in_channels) # (B, T, N*C)
+            attn_out = self.temp_attn(temporal_in) # (B, T, embed_size)
             
             if self.act_func in ["glu", "GLU", "gtu", "GTU"]:
                 temporal_out = nn.Linear(self.embed_size, 2 * num_nodes * self.graph_in_channels, device=self.device)(attn_out) # (B, T, N*in_channels)
@@ -595,9 +512,9 @@ class spatialTemporalLearningLayer(nn.Module):
             seq_len = x.shape[1]
             num_nodes = x.shape[2]
             in_channels = x.shape[3]
-            spatial_in = x.reshape(-1, num_nodes, in_channels)#(B*T, N, C)
+            spatial_in = x.reshape(-1, num_nodes, in_channels) # (B*T, N, C)
             
-            attn_out = self.spat_attn(spatial_in) #(B*T, N, embed_size)
+            attn_out = self.spat_attn(spatial_in) # (B*T, N, embed_size)
             
             if self.act_func in ["glu", "GLU", "gtu", "GTU"]:
                 temporal_out = nn.Linear(self.embed_size, 2 * self.graph_in_channels, device=self.device)(attn_out) # (B*T, N, in_channels)
@@ -635,11 +552,6 @@ class temporalLearning(nn.Module):
     def __init__(self, args, in_channels, out_channels, device, act_func="relu", dropout=.2, embed_size=64, 
                 num_heads=8, num_layers=1, ffwd_size=64, temp_method="Conv", is_conv=False):
         super(temporalLearning, self).__init__()
-        # if args.data in ["SMAP","MSL"]:
-        #     # temp_kernels = [2,3]
-        #     temp_kernels = [2]
-        # else:
-        #     temp_kernels = [2, 3, 5]
         self.temp_method = temp_method
         self.out_channels = out_channels
         self.device = device
@@ -647,13 +559,16 @@ class temporalLearning(nn.Module):
         self.tconvs = nn.ModuleList()
         
         temp_kernels = [2, 3, 5]
+        
         if self.temp_method == "Conv":
             for kt in temp_kernels:
                 self.tconvs.append(conv2D(in_channels, out_channels, kernel_size=(kt, 1), act_func=act_func))
             self.out = conv2D(len(temp_kernels) * out_channels, out_channels, act_func=act_func)
+            
         elif self.temp_method == "Attn":
             self.temp_attn = TransformerEncoder(self.embed_size, num_heads=num_heads, dropout=dropout, 
                                                     num_layers=num_layers, ffwd_size=ffwd_size, temp_kernel=temp_kernels[-1], is_conv=is_conv, device=self.device)
+        
         elif self.temp_method == "SAttn":
             self.temp_attn = TransformerEncoder(self.embed_size, num_heads=num_heads, dropout=dropout, 
                                                     num_layers=num_layers, ffwd_size=ffwd_size, temp_kernel=temp_kernels[-1], is_conv=is_conv, device=self.device)

@@ -3,7 +3,7 @@ import  os
 import argparse
 
 
-parser = argparse.ArgumentParser(description='PyTorch RNN Prediction Model on Time-series Dataset')
+parser = argparse.ArgumentParser(description='PyTorch Prediction Model on Time-series Dataset')
 parser.add_argument('--data', type=str, default='SWaT',
                     help='type of the dataset (SWaT, WADI, ...)')
 parser.add_argument('--filename', type=str, default='SWaT_Dataset_Normal_v1.csv',
@@ -14,8 +14,8 @@ parser.add_argument('--log_dir', default="expe", type=str)
 parser.add_argument('--model', default="v2_", type=str)
 parser.add_argument('--pred_model', default="gat", type=str)
 parser.add_argument('--gpu_id', default="0", type=str)
-parser.add_argument('--temp_method', default="Conv", type=str)
-parser.add_argument('--log_dir_transfer', default="expe/transfer_learning", type=str)#迁移学习模型存放地址
+parser.add_argument('--temp_method', default="SAttn", type=str)
+
 
 ### graph constructure
 parser.add_argument('--nnodes', type=int, default=127, help='number of nodes')
@@ -88,17 +88,17 @@ base_dir = os.getcwd()
 '''
 if args.is_mas:
     train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2('SMD', 'machine-3-5',
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=args.val_ratio,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                     down_len=args.down_len)
+                                                                                    device=DEVICE,
+                                                                                    window_size=args.window_size,
+                                                                                    val_ratio=args.val_ratio,
+                                                                                    batch_size=args.batch_size,
+                                                                                    is_down_sample=args.is_down_sample,
+                                                                                    down_len=args.down_len)
 else:
     train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data('SMD', 'machine-3-5', device = DEVICE,
-                                                                                 window_size = args.window_size, val_ratio = args.val_ratio,
-                                                                                 batch_size = args.batch_size,
-                                                                                 is_down_sample=args.is_down_sample, down_len=args.down_len)                
+                                                                                window_size = args.window_size, val_ratio = args.val_ratio,
+                                                                                batch_size = args.batch_size,
+                                                                                is_down_sample=args.is_down_sample, down_len=args.down_len)                
 '''
 '''
 smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/test_data_smd_unsup.npz")
@@ -110,12 +110,12 @@ attack_test = attack[15000:]
 label_test = labels[15000:]
 
 train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data3(attack_full, attack_test, label_test,
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=0.05,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                     down_len=args.down_len)
+                                                                                    device=DEVICE,
+                                                                                    window_size=args.window_size,
+                                                                                    val_ratio=0.05,
+                                                                                    batch_size=args.batch_size,
+                                                                                    is_down_sample=args.is_down_sample,
+                                                                                    down_len=args.down_len)
 
 '''
 
@@ -134,20 +134,20 @@ print(attack_train.shape, attack_test.shape)
 
 
 _, _, test_loader, y_test_labels, _ = load_data3(attack_train, attack_test, test_labels,
-                                                                         device=DEVICE,
-                                                                         window_size=args.window_size,
-                                                                         val_ratio=args.val_ratio,
-                                                                         batch_size=args.batch_size,
-                                                                         is_down_sample=args.is_down_sample,
-                                                                         down_len=args.down_len)
+                                                                        device=DEVICE,
+                                                                        window_size=args.window_size,
+                                                                        val_ratio=args.val_ratio,
+                                                                        batch_size=args.batch_size,
+                                                                        is_down_sample=args.is_down_sample,
+                                                                        down_len=args.down_len)
 
 train_loader, val_loader, min_max_scaler = load_data_unsup_train(attack_train, train_labels,
-                                                                     device=DEVICE,
-                                                                     window_size=args.window_size,
-                                                                     val_ratio=0.05,
-                                                                     batch_size=args.batch_size,
-                                                                     is_down_sample=args.is_down_sample,
-                                                                     down_len=args.down_len)
+                                                                    device=DEVICE,
+                                                                    window_size=args.window_size,
+                                                                    val_ratio=0.05,
+                                                                    batch_size=args.batch_size,
+                                                                    is_down_sample=args.is_down_sample,
+                                                                    down_len=args.down_len)
 
 ## set seed
 init_seed(args.seed)
