@@ -3,20 +3,24 @@
 ***Note: The codes and docs are being updated and optimized continuously.***
 ## 1.dataset
 
-Please refer to /lib/dataloader_... for more details of data loading and preprocessing
+Please refer to '/lib/dataloader_...' for more details of data loading and preprocessing
 
 1.1 SWaT and WADI
 - train and test data in '.csv' with the last column as labels (0 for normal and 1 for abnormal)
 
 1.2 SMD and MSL
-- train and test data in '..._train.pkl' and '..._test.pkl' formed as arrays with the shape (samples, features)
-- test labels also in '...test_label.pkl formed as arrays with the shape (samples)
+- train and test data in '..._train.pkl' and '..._test.pkl' formed as arrays with the shape (samples, features), for example: 'machine-1-1_train.pkl' or 'MSL_train.pkl'
+- test labels also in '...test_label.pkl formed as arrays with the shape (samples,)
 
 1.3 Unsupervised Datasets
-- the train and test data are concatenated together and saved in '.....npz', where label 'a' are samples with the shape (samples, features) and label 'b' are labels with the shape (samples)
+- the train and test data should be concatenated together and saved in '.....npz', where label 'a' are samples with the shape (samples, features) and label 'b' are labels with the shape (samples,), you can refer to /data/unsupervised_data/test_data_smd_unsup.npz
 
-## 2.常用参数说明
-- pred_model: 预测模型 [lstm,cnn,gru,gat]
+1.4 Your Datasets
+- you can use '/lib/dataloader_...' according to your data format or create new dataloaders
+
+## 2. key parameters
+
+- data: dataset name, such as 'SWaT', 'WADI', ...
 
 2.1 图结构参数
 - nnodes：节点数目（KPI个数），因数据集不同而不同
