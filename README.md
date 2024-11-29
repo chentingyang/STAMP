@@ -13,7 +13,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 - test labels also in '...test_label.pkl formed as arrays with the shape (samples,)
 
 1.3 Unsupervised Datasets
-- the train and test data should be concatenated together and saved in '.....npz', where label 'a' are samples with the shape (samples, features) and label 'b' are labels with the shape (samples,), you can refer to /data/unsupervised_data/test_data_smd_unsup.npz
+- the train and test data should be concatenated together and saved in '.....npz', where label 'a' are samples with the shape (samples, features) and label 'b' are labels with the shape (samples,), you can refer to '/data/unsupervised_data/test_data_smd_unsup.npz'
 
 1.4 Your Datasets
 - you can use '/lib/dataloader_...' according to your data format or create new dataloaders
@@ -21,40 +21,44 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 ## 2. key parameters
 
 - data: dataset name, such as 'SWaT', 'WADI', ...
+- temp_methods: for STAMP, keep it as 'SAttn'
 
-2.1 图结构参数
-- nnodes：节点数目（KPI个数），因数据集不同而不同
-- top-k：邻居节点个数
-- em_dim：节点嵌入向量维度
-- alpha：缩放系数
-- hidden_dim：隐藏层维度
+2.1 Graph Structure
+- nnodes：number of features, which varies across datasets
+- top-k：number of neighbor nodes
 
-2.2 预测模型参数
-- window_size：时间窗口大小
-- n_pred：预测步数
-- temp_kernel：最大时间卷积核大小，如多尺度卷积核[2,3,5]，则`temp_kernel=5`
-- in_channels：输入数据维度
-- out_channels：输出数据维度
-- layer_num：block（时间学习、时空学习模块）数量
-- act_func：激活函数
-- pred_lr_init：预测模型初始学习率
 
-2.3 自编码器参数
-- latent_size：潜在向量维度
-- ae_lr_init：自编码器初始学习率
+2.2 Pred Model
+- window_size：time window length
+- n_pred：prediction step
+- temp_kernel：the kernel size of Convolutional Input-Output Layer
+- layer_num：number of TLL and SLL Layers
+- act_func：activation function
 
-2.4 训练参数
-- seed：随机种子
-- val_ratio：验证集比例
-- is_down_sample：是否采用下采样策略
-- down_len：下采样长度
-- is_mas：是否用历史移动平均分量特征
+2.3 Attention
+- embed_size: embedding size
+- num_heads: number of attention heads
+- is_conv: while True, FFN use Linear; else, FFN use Conv1D
+ 
+2.4 AE
+- latent_size：dimension of L-space
 
-2.5 测试参数
-- test_alpha：预测误差权重
-- test_beta：重构误差权重
-- test_gamma：对抗误差权重
-- search_steps：网格搜索步数
-- top_kErr：输出topk根因KPI
+
+2.4 Training
+
+- is_down_sample：whether performing down-sampling to the original samples
+- down_len：down-sampling ratio
+- is_mas：whether performing a moving average operation by sub-windows to extend channel
+
+2.5 Testing
+- test_alpha：weight of prediction error
+- test_beta：weight of reconstruction error
+- test_gamma：weight of adversarial error
+
+2.6 params in get_final_result()
+- topk: number of features to calculate the anomaly score
+- option: set to 2
+- method: ['sum', 'max', 'mean'], types of aggragation operators
+
 
 
