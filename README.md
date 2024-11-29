@@ -63,12 +63,14 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 ## 3. Semi-Supervised Detecting
 
 3.1 Run STAMP
+
 python run.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
 
 3.2 
 check the saved model weights in '/expe'
 
 3.3 Evaluation
+
 python test.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
 
 
