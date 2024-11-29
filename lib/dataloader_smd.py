@@ -156,7 +156,7 @@ def load_data2(dataset, group_name, device = "gpu", window_size = 12, val_ratio 
 
     ## EDA - Data Pre-Processing
     (normal, _), (attack, labels) = get_data(dataset, group_name, max_train_size=None, max_test_size=None, train_start=0,
-                                             test_start=0)
+                                            test_start=0)
     print("normal: ", normal.shape)
     print("attack: ", attack.shape)
     print("labels: ", labels.shape)

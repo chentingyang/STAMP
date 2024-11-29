@@ -318,11 +318,10 @@ def get_Test_scores_err_max(test_ae_result, option = 1, method = "max"):
     test_ae_scores, normal_ae_scores = [], []
     for i in range(w):
         test_result = [data[:, i, :] for data in test_ae_result]
-        #print(np.array(test_result).shape) (2, samples, num_nodes)
         test_ae_score = get_test_err_scores(test_result, option=option)
 
         test_ae_scores.append(test_ae_score.tolist())
-    #窗口内各时间戳上聚合，input_shape(window_len, num_nodes, samples), return shape(num_nodes, samples)
+    # input_shape(window_len, num_nodes, samples), return shape(num_nodes, samples)
     if method in ["max", "MAX"]:
         return np.array(test_ae_scores).max(axis=0)
     elif method in ["mean", "MEAN"]:
@@ -333,7 +332,7 @@ def get_Test_scores_err_max(test_ae_result, option = 1, method = "max"):
 
 def get_score_PredAndAE(test_pred_result, test_ae_result,  test_generate_result, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3):
     print('=========================** Option: {} **============================\n'.format(str(option)))
-    ### 得到测试、验证数据集对应的异常分数
+    
     test_pred_scores, test_ae_scores, test_generate_scores = 0, 0, 0
     if alpha > 0:
         test_pred_scores = get_Test_scores_err_max(test_pred_result, option=option, method = method)
@@ -351,25 +350,23 @@ def get_score_PredAndAE(test_pred_result, test_ae_result,  test_generate_result,
     total_topk_err_scores = np.sum(np.take_along_axis(test_scores, topk_indices, axis=0), axis=0)
     return test_scores, total_topk_err_scores
 
-def get_topk_err(test_scores, topk = 3):#获得所有时段上的topk指标索引
-    print("test_scores: ", test_scores.shape) ### (feature_num, Batch)
+def get_topk_err(test_scores, topk = 3):
+    print("test_scores: ", test_scores.shape) # (feature_num, Batch)
     total_features = test_scores.shape[0]
     topk_indices = np.argpartition(test_scores, range(total_features - topk - 1, total_features), axis=0)[-topk:]
 
-    print("topk_indices: ", topk_indices.shape) ### (topk, Batch)
+    print("topk_indices: ", topk_indices.shape) # (topk, Batch)
     return topk_indices
 
 
 def get_final_result_POT(test_pred_results, test_ae_results, test_generate_results, train_pred_results, train_ae_results, train_generate_results, 
                         y_test_labels, q=1e-4, level=0.9998, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, search_steps=500):
-    #init_score为训练集上的误差score
-    test_scores,total_topk_err_scores_test = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
-                                       method=method, alpha=alpha, beta=beta, gamma=gamma)
-    train_scores,total_topk_err_scores_train = get_score_PredAndAE(train_pred_results, train_ae_results, train_generate_results, topk=topk, option=option,
-                                       method=method, alpha=alpha, beta=beta, gamma=gamma)
     
-    print(np.sort(np.array(total_topk_err_scores_train))[::-1][:100])    
-    #print(np.sort(np.array(total_topk_err_scores_test))[::-1][:100])
+    test_scores,total_topk_err_scores_test = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
+                                    method=method, alpha=alpha, beta=beta, gamma=gamma)
+    train_scores,total_topk_err_scores_train = get_score_PredAndAE(train_pred_results, train_ae_results, train_generate_results, topk=topk, option=option,
+                                    method=method, alpha=alpha, beta=beta, gamma=gamma)
+    
     #info = pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test), np.array(y_test_labels), q, level)
     info = bf_search_pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test) , np.array(y_test_labels), q=1e-4, level_range=[0.9999,1-1e-10], step_num=50)
     return info
@@ -377,7 +374,7 @@ def get_final_result_POT(test_pred_results, test_ae_results, test_generate_resul
 def get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, search_steps=500):
 
     test_scores,total_topk_err_scores = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
-                                       method=method, alpha=alpha, beta=beta, gamma=gamma)
+                                    method=method, alpha=alpha, beta=beta, gamma=gamma)
 
     ### Find the best-f1 score by searching best `threshold` in [`start`, `end`)
     # get best f1
@@ -397,24 +394,24 @@ def get_final_result(test_pred_results, test_ae_results,  test_generate_results,
     }
     return info,test_scores,predict
 
-def get_graph_weight(pred_model, nnodes, target_num):#通过图结构中边的权重获得节点排序
+def get_graph_weight(pred_model, nnodes, target_num): # Obtain feature importance through the weights of edges in the graph structure
     idx = torch.arange(nnodes).to(DEVICE)
-    adj = pred_model.gc(idx).detach().cpu().numpy()#(nnodes, nnodes)
+    adj = pred_model.gc(idx).detach().cpu().numpy() # (nnodes, nnodes)
     
-    weight_out = np.sum(adj, axis=1)#出度权重和
-    sort_weight_out = weight_out.argsort()[::-1]#降序排序获得索引
+    weight_out = np.sum(adj, axis=1) # OD
+    sort_weight_out = weight_out.argsort()[::-1] # ranking
     
-    weight_in = np.sum(adj, axis=0)#入度权重和
-    sort_weight_in = weight_in.argsort()[::-1]
+    weight_in = np.sum(adj, axis=0) # ID 
+    sort_weight_in = weight_in.argsort()[::-1] # ranking
     
     return sort_weight_out[:target_num], sort_weight_in[:target_num]
 
 def get_score_weight(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, target_num=10):
     test_scores,total_topk_err_scores = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
-                                       method=method, alpha=alpha, beta=beta, gamma=gamma)#通过各节点异常得分获得节点排序
+                                    method=method, alpha=alpha, beta=beta, gamma=gamma) # Obtain feature importance through the anomaly scores
     
-    score_weight = np.mean(test_scores, axis=1)#(nodes),节点各时段的异常得分和
-    sort_score_weight = np.array(score_weight).argsort()[::-1]#降序排序获得索引
+    score_weight = np.mean(test_scores, axis=1) # (nodes)
+    sort_score_weight = np.array(score_weight).argsort()[::-1] # ranking
     
     return sort_score_weight[:target_num]
     

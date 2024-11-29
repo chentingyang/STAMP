@@ -486,7 +486,7 @@ class PredictedModelTrainer(object):
 
         end_val = time.time()
         self.logger.info('**********Val Epoch {}: average predModel Loss: {:.6f}, inference time: {:.3f}s'.
-                         format(epoch, val_pred_loss, end_val-start_val))
+                        format(epoch, val_pred_loss, end_val-start_val))
 
         loss1 = np.array(loss1_list).mean()
 

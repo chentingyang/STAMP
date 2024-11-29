@@ -227,8 +227,8 @@ def plot_gc(adj, threshold=0.1):
     pos = nx.spring_layout(G)
 
     val_map = {'5': "blue",
-               #            '9': "green",
-               '11': "red"}
+            #            '9': "green",
+            '11': "red"}
 
     value1 = [100 if node not in val_map else 200 for node in G.nodes()]
     value2 = [val_map.get(node, "indigo") for node in G.nodes()]

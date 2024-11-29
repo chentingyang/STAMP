@@ -473,9 +473,9 @@ if __name__ == '__main__':
     test_filename = data_dir + "/attack.csv"
 
     train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2(train_filename, test_filename,
-                                                                                      device="cpu", window_size=12,
-                                                                                      val_ratio=0.2, batch_size=64,
-                                                                                      is_down_sample=True, down_len=10)
+                                                                                    device="cpu", window_size=12,
+                                                                                    val_ratio=0.2, batch_size=64,
+                                                                                    is_down_sample=True, down_len=10)
     '''
     # normal, min_max_scaler = preprocessTrainingData(train_filename, sep=None, min_max_scaler=None, training=True)
     # attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=None, training=True)

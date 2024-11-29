@@ -95,40 +95,19 @@ args.device = DEVICE
 
 base_dir = os.getcwd()
 
-'''
-#train_filename = base_dir + "/data/" + args.data + "/WADI_14days.csv"
-#test_filename = base_dir + "/data/" + args.data + "/attack_labelled.csv"
-
-train_filename = base_dir + "/data/" + args.data + "/SWaT_Dataset_normal.csv"
-test_filename = base_dir + "/data/" + args.data + "/SWaT_Dataset_attack.csv"
-
-if args.is_mas:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2(train_filename, test_filename,
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=args.val_ratio,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                     down_len=args.down_len)
+if args.is_mas:  #perform moving average to extend channels
+    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2('SMD', 'machine-1-1',
+                                                                                    device=DEVICE,
+                                                                                    window_size=args.window_size,
+                                                                                    val_ratio=args.val_ratio,
+                                                                                    batch_size=args.batch_size,
+                                                                                    is_down_sample=args.is_down_sample,
+                                                                                    down_len=args.down_len)
 else:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data(args.data, device = DEVICE,
-                                                                                 window_size = args.window_size, val_ratio = args.val_ratio,
-                                                                                 batch_size = args.batch_size,
-                                                                                 is_down_sample=args.is_down_sample, down_len=args.down_len)
-'''
-if args.is_mas:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2('SMD', 'machine-3-2',
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=args.val_ratio,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                     down_len=args.down_len)
-else:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data('SMD', 'machine-3-2', device = DEVICE,
-                                                                                 window_size = args.window_size, val_ratio = args.val_ratio,
-                                                                                 batch_size = args.batch_size,
-                                                                                 is_down_sample=args.is_down_sample, down_len=args.down_len)
+    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data('SMD', 'machine-1-1', device = DEVICE,
+                                                                                window_size = args.window_size, val_ratio = args.val_ratio,
+                                                                                batch_size = args.batch_size,
+                                                                                is_down_sample=args.is_down_sample, down_len=args.down_len)
 
 ## set seed
 init_seed(args.seed)
@@ -139,20 +118,9 @@ channels_list = [[16,8,32],[32,8,64]]
 
 AE_IN_CHANNELS = args.window_size * args.nnodes * args.in_channels
 latent_size = args.window_size * args.latent_size
-'''
-graph = np.load('smd_gc.npy')
-graph = torch.from_numpy(graph).to(DEVICE)
-'''
-if args.pred_model in ["gat","GAT"]:
-    pred_model = STATModel(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["cnn", "CNN"]:
-    channels_list = [[16, 8, 32], [32, 8, 32]]
-    pred_model = OurCNN(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["lstm", "LSTM"]:
-    args.hidden_dim = 16
-    pred_model = OurLSTM(args, DEVICE, args.window_size - args.n_pred, hidden_dim= args.hidden_dim)
-else:
-    raise "model Error ..."
+
+
+pred_model = STATModel(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
 # pred_model = to_device(pred_model, DEVICE)
 
 
@@ -169,34 +137,6 @@ map_location = torch.device(DEVICE)
 # map_location = lambda storage.cuda(0), loc: storage
 ##[val_gt_list, val_pred_list, val_construct_list]
 
-'''
-check_point = torch.load(model_path, map_location = map_location)
-pred_state_dict = check_point['pred_state_dict']
-print("load model: ", model_path)
-pred_model.load_state_dict(pred_state_dict)
-pred_model.to(DEVICE)
-pred_model.eval()
-
-### 保存图结构
-idx = torch.arange(args.nnodes).to(DEVICE)
-adj = pred_model.gc(idx).detach().cpu().numpy()
-print("adj: ", adj.shape,type(adj), adj)
-np.save("smd_gc",adj)
-'''
-
-
-def get_train_results(train_loader, map_location):#获取训练输出（POT专用）
-    train_results = tester.testing(train_loader, map_location)
-    train_y_pred, train_loss1_list, train_loss2_list, train_pred_list, train_gt_list, train_origin_list, train_construct_list, train_generate_list, train_generate_construct_list = concate_results(train_results)
-    
-    train_pred_results = [train_pred_list, train_gt_list]
-
-    train_ae_results = [train_construct_list, train_origin_list]
-
-    train_generate_results = [train_generate_list, train_generate_construct_list]
-    
-    return train_pred_results, train_ae_results, train_generate_results
-#train_pred_results, train_ae_results, train_generate_results = get_train_results(train_loader, map_location)
 
 test_results = tester.testing(test_loader, map_location)
 
