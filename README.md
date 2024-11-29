@@ -1,7 +1,8 @@
 # STAMP
 
 ***Note: The codes and docs are being updated and optimized continuously.***
-
+## 1.dataset
+1.1 SWAT
 ## 1.常用参数说明
 - pred_model: 预测模型 [lstm,cnn,gru,gat]
 
