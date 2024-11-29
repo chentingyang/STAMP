@@ -44,21 +44,33 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 - latent_size：dimension of L-space
 
 
-2.4 Training
+2.5 Training
 
 - is_down_sample：whether performing down-sampling to the original samples
 - down_len：down-sampling ratio
 - is_mas：whether performing a moving average operation by sub-windows to extend channel
 
-2.5 Testing
+2.6 Testing
 - test_alpha：weight of prediction error
 - test_beta：weight of reconstruction error
 - test_gamma：weight of adversarial error
 
-2.6 params in get_final_result()
+2.7 params in get_final_result()
 - topk: number of features to calculate the anomaly score
 - option: set to 2
 - method: ['sum', 'max', 'mean'], types of aggragation operators
+
+## 3. Semi-Supervised Detecting
+
+3.1 Run STAMP
+python run.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
+
+3.2 
+check the saved model weights in '/expe'
+
+3.3 Evaluation
+python test.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+
 
 
 
