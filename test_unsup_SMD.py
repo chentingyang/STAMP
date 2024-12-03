@@ -83,7 +83,6 @@ from lib.dataloader_smd import load_data,load_data2,load_data3,load_data_unsup_t
 from lib.utils import *
 from lib.metrics import *
 from model.utils import *
-import torch.utils.data as data_utils
 
 
 DEVICE = get_default_device()
@@ -92,43 +91,7 @@ args.device = DEVICE
 
 base_dir = os.getcwd()
 
-
-'''
-if args.is_mas:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2('SMD', 'machine-3-5',
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=args.val_ratio,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                     down_len=args.down_len)
-else:
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data('SMD', 'machine-3-5', device = DEVICE,
-                                                                                 window_size = args.window_size, val_ratio = args.val_ratio,
-                                                                                 batch_size = args.batch_size,
-                                                                                 is_down_sample=args.is_down_sample, down_len=args.down_len)
-
-'''
-'''
-smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/test_data_smd_unsup.npz")
-attack = smd_unsup_data['a']
-labels = smd_unsup_data['b']
-attack_full = attack[:15000]
-label_full = labels[:15000]
-attack_test = attack[15000:]
-label_test = labels[15000:]
-
-
-train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data3(attack_full, attack_test, label_test,
-                                                                                     device=DEVICE,
-                                                                                     window_size=args.window_size,
-                                                                                     val_ratio=0.05,
-                                                                                     batch_size=args.batch_size,
-                                                                                     is_down_sample=args.is_down_sample,
-                                                                                    down_len=args.down_len)
-
-'''
-smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/selected_data//Iforest/result_method3_GDN.npz")
+smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/selected_data//Iforest/result_method1.npz")
 attack_train = smd_unsup_data['a']
 train_labels = smd_unsup_data['b']
 attack_test = smd_unsup_data['c']
@@ -137,20 +100,20 @@ print(len(test_labels))
 
 
 _, _, test_loader, y_test_labels, _ = load_data3(attack_train, attack_test, test_labels,
-                                                                         device=DEVICE,
-                                                                         window_size=args.window_size,
-                                                                         val_ratio=args.val_ratio,
-                                                                         batch_size=args.batch_size,
-                                                                         is_down_sample=args.is_down_sample,
-                                                                         down_len=args.down_len)
+                                                                        device=DEVICE,
+                                                                        window_size=args.window_size,
+                                                                        val_ratio=args.val_ratio,
+                                                                        batch_size=args.batch_size,
+                                                                        is_down_sample=args.is_down_sample,
+                                                                        down_len=args.down_len)
 
 train_loader, val_loader, min_max_scaler = load_data_unsup_train(attack_train, train_labels,
-                                                                     device=DEVICE,
-                                                                     window_size=args.window_size,
-                                                                     val_ratio=0.05,
-                                                                     batch_size=args.batch_size,
-                                                                     is_down_sample=args.is_down_sample,
-                                                                     down_len=args.down_len)
+                                                                    device=DEVICE,
+                                                                    window_size=args.window_size,
+                                                                    val_ratio=0.05,
+                                                                    batch_size=args.batch_size,
+                                                                    is_down_sample=args.is_down_sample,
+                                                                    down_len=args.down_len)
 
 ## set seed
 init_seed(args.seed)
@@ -162,16 +125,7 @@ channels_list = [[16,8,32],[32,8,64]]
 AE_IN_CHANNELS = args.window_size * args.nnodes * args.in_channels
 latent_size = args.window_size * args.latent_size
 
-if args.pred_model in ["gat","GAT"]:
-    pred_model = STATModel(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["cnn", "CNN"]:
-    channels_list = [[16, 8, 32], [32, 8, 32]]
-    pred_model = OurCNN(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["lstm", "LSTM"]:
-    args.hidden_dim = 16
-    pred_model = OurLSTM(args, DEVICE, args.window_size - args.n_pred, hidden_dim= args.hidden_dim)
-else:
-    raise "model Error ..."
+pred_model = STATModel(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
 # pred_model = to_device(pred_model, DEVICE)
 
 
@@ -188,7 +142,7 @@ map_location = torch.device(DEVICE)
 # map_location = lambda storage.cuda(0), loc: storage
 ##[val_gt_list, val_pred_list, val_construct_list]
 
-def get_train_results(train_loader, map_location):#获取训练输出（POT专用）
+def get_train_results(train_loader, map_location):# for POT computing, adopt the trained STAMP to compute the errors in the training set 
     train_results = tester.testing(train_loader, map_location)
     train_y_pred, train_loss1_list, train_loss2_list, train_pred_list, train_gt_list, train_origin_list, train_construct_list, train_generate_list, train_generate_construct_list = concate_results(train_results)
     
@@ -199,6 +153,7 @@ def get_train_results(train_loader, map_location):#获取训练输出（POT专�
     train_generate_results = [train_generate_list, train_generate_construct_list]
     
     return train_pred_results, train_ae_results, train_generate_results
+
 train_pred_results, train_ae_results, train_generate_results = get_train_results(train_loader, map_location)
     
 
@@ -263,37 +218,19 @@ test_generate_results = [test_generate_list, test_generate_construct_list]
 """
 
 print("================= Find best f1 from score: normalization loss ... =================")
-#info,test_scores,predict = get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 2, method="mean", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 info = get_final_result_POT(test_pred_results, test_ae_results, test_generate_results, train_pred_results, train_ae_results, train_generate_results, y_test_labels, topk = 1, option = 2, method="max", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 print(info)
-'''
-
-#用包含异常数据初始训练以获得节点权重排序
-check_point = torch.load(model_path, map_location = map_location)
-pred_state_dict = check_point['pred_state_dict']
-
-pred_model.load_state_dict(pred_state_dict)
-print("load pred model done!")
-pred_model.to(DEVICE)
-
-target_num = args.nnodes
-sort_graph_weight_out, sort_graph_weight_in = get_graph_weight(pred_model, args.nnodes, target_num)
-sort_score_weight = get_score_weight(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 2, method="max", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, target_num=target_num)
-np.savez('/home/chenty/STAT-AD/weights/node_weights_SMD_unsup_train_GDN.npz', a=sort_graph_weight_out, b=sort_graph_weight_in, c=sort_score_weight)
-'''
-'''
 print()
+
 print("================= Find best f1 from score: normalization loss ... =================")
-#info,test_scores,predict = get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 2, method="sum", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 info = get_final_result_POT(test_pred_results, test_ae_results, test_generate_results, train_pred_results, train_ae_results, train_generate_results, y_test_labels, topk = 1, option = 2, method="sum", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 print(info)
 
 
 print()
 print("================= Find best f1 from score: normalization loss ... =================")
-#info,test_scores,predict = get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 2, method="max", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 info = get_final_result_POT(test_pred_results, test_ae_results, test_generate_results, train_pred_results, train_ae_results, train_generate_results, y_test_labels, topk = 1, option = 2, method="mean", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, search_steps=args.search_steps)
 print(info)
-'''
+
 
 
