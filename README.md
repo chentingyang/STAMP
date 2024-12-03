@@ -79,7 +79,7 @@ python test.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --
 python get_model_information.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4
 
 4.2 
-check the saved model information in '/expe'
+check the saved model information in '/weights'
 
 4.3 Screening Based on Model Information
 
