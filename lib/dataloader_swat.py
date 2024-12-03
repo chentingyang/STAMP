@@ -246,7 +246,7 @@ def load_data2(train_filename, test_filename, device = "gpu", window_size = 12, 
     return train_loader, val_loader, test_loader, y_test_labels, min_max_scaler
 
 def load_data3(normal, attack, labels, device = "gpu", window_size = 12, val_ratio = 0.2, batch_size = 64, is_down_sample = False, down_len=10):
-    #用有标签数据（含异常）训练和测试
+    #load data formed as np.array
 
     labels = np.array(labels)
     print("normal: ", normal.shape)
@@ -369,7 +369,9 @@ def load_data3(normal, attack, labels, device = "gpu", window_size = 12, val_rat
 
 
 def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_ratio = 0.2, batch_size = 64, is_down_sample = False, down_len=10):
-    #接收无监督方法输出的数据和标签，筛选正常窗口，作为训练集
+    ### 
+    # Receive samples and labels screened by unsupervised methods,  extract continuous time windows, and use them as the training set
+    ###
 
     labels = np.array(labels)
     print("attack_train: ", attack.shape)
@@ -476,7 +478,6 @@ def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_
     return train_loader, val_loader, min_max_scaler
 
 def load_data_tsne(attack, labels, scaler, is_down_sample = True, down_len=50):
-    #为tsne可视化输出降采样后的数据和标签
 
     labels = np.array(labels)
     print("attack_train: ", attack.shape)
