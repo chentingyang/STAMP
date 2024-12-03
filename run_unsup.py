@@ -18,7 +18,7 @@ parser.add_argument('--temp_method', default="SAttn", type=str)
 
 
 ### graph constructure
-parser.add_argument('--nnodes', type=int, default=127, help='number of nodes')
+parser.add_argument('--nnodes', type=int, default=38, help='number of nodes')
 parser.add_argument('--top_k', type=int, default=10, help='top-k')
 parser.add_argument('--em_dim', type=int, default=32, help='embedding dimension')
 parser.add_argument('--alpha', type=int, default=3, help='alpha')
