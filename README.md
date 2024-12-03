@@ -1,6 +1,5 @@
 # STAMP
 
-***Note: The codes and docs are being updated and optimized continuously.***
 ## 1.dataset
 
 Please refer to '/lib/dataloader_...' for more details of data loading and preprocessing
@@ -72,6 +71,28 @@ check the saved model weights in '/expe'
 3.3 Evaluation
 
 python test.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+
+## 4. Unsupervised Detecting
+
+4.1 Get Model-Derived information
+
+python get_model_information.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4
+
+4.2 
+check the saved model information in '/expe'
+
+4.3 Screening Based on Model Information
+
+python /unsupervise/Screening.py
+
+4.4 Run STAMP
+
+python run_unsup.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
+
+4.5 Evaluation
+
+python test_unsup.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+
 
 
 
