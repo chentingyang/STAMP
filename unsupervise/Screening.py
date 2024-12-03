@@ -18,7 +18,6 @@ from sklearn import preprocessing
 import pysnooper
 from utils import evaluate
 from datetime import datetime
-import train_test_cluster
 import pickle
 
 def train(x_train, *args, **kwargs):
@@ -110,68 +109,20 @@ def bf_search_feature_selection_pyod(start, end, step_num, feature_importance, d
             
     print("best_parameter = : " + str(best_parameter) + ", best_score = : " + str(best_recall))
     
-### grid searching the number of retained features
-def bf_search_feature_selection_cluster(start, end, step_num, feature_importance, method, display_freq=1, verbose=True):
-    if step_num is None or end is None:
-        end = start
-        step_num = 1
-        
-    search_step, search_range, search_lower_bound = step_num, end - start, start
-    
-    if verbose:
-        print("search range: ", search_lower_bound, search_lower_bound + search_range)
-        
-    parameter = search_lower_bound
-    best_recall = 0
-    
-    for i in range(search_step):
-        parameter += int(search_range / int(search_step))
-        
-        trainfea = X_full[:, feature_importance[:parameter]]
-        testfea = X_full[:, feature_importance[:parameter]]
-
-        
-        if method in ['DBSCAN']:
-            tmp_labels = train_test_cluster.fit_predict(trainfea, DBSCAN(min_samples=1, eps=0.4))
-            _, _, sort_categories = train_test_cluster.check_labels(tmp_labels, method)
-            labels = train_test_cluster.get_labels_by_sort(tmp_labels, sort_categories, 3)
-            
-        elif method in ['KMeans']:
-            #kmeans = KMeans(n_clusters=20, random_state=33).fit(X_test)
-            kmeans = KMeans(n_clusters=10, random_state=33).fit(trainfea)
-            tmp_labels = kmeans.labels_
-            centers = kmeans.cluster_centers_ #(clusters, features)
-            _, _, sort_categories = train_test_cluster.check_labels(tmp_labels, method='KMeans')
-            labels = train_test_cluster.get_labels_bydist(tmp_labels, 'KMeans', sort_categories, 3, centers=centers)
-            
-            
-        accuracy, precision, recall, f_score = method_evaluate(labels, Y_full, False)
-        print("param=: " + str(parameter))
-        
-        if recall > best_recall:
-            best_recall = recall
-            best_parameter = parameter
-            print("best_parameter = : " + str(best_parameter) + ", best_score = : " + str(best_recall))
-            
-    print("best_parameter = : " + str(best_parameter) + ", best_score = : " + str(best_recall))
-
 
 
 test_path_SMD = '/home/chenty/STAT-AD/data/SMD/test_data_smd_unsup.npz'
-feature_importance_path_smd = '/home/chenty/STAT-AD/expe/node_weights_SMD_unsup_train_STAMP.npz' # saved model-derived information
+feature_importance_path_smd = '/home/chenty/STAT-AD/weights/node_weights_SMD_unsup_train_STAMP.npz' # saved model-derived information
 
 
 def load_data(path):
     data = np.load(path)
     x = data['a']
     y = data['b']
-    print(x.shape, y.shape)#(449919, 45)
+    print(x.shape, y.shape)
     return x, y
 
-
 X, Y = load_data(test_path_SMD)
-
-
 
 X_full = X[:15000]
 Y_full = Y[:15000] # 1.11% anomalies
@@ -194,11 +145,6 @@ bf_search_feature_selection_pyod(0, 38, 38, sort_graph_weight_out)
 bf_search_feature_selection_pyod(0, 38, 38, sort_graph_weight_in)
 bf_search_feature_selection_pyod(0, 38, 38, sort_score_weight)
 
-'''
-bf_search_feature_selection_cluster(18, 38, 10, sort_graph_weight_out, "DBSCAN")
-bf_search_feature_selection_cluster(18, 38, 10, sort_graph_weight_in, "DBSCAN")
-bf_search_feature_selection_cluster(18, 38, 10, sort_score_weight, "DBSCAN")
-'''
 
 # retained features
 parameter = [29, 13, 21]

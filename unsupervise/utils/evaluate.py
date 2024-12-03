@@ -62,10 +62,10 @@ def get_test_err_scores(test_result, option=1):
     all_scores = None
     feature_num = np_test_result.shape[-1]
 
-    ## 每个维度平滑后的误差分数：测试、验证
+    
     for i in range(feature_num):
         test_re_list = np_test_result[:2, :, i]
-        ### 测试数据：标准化并平滑后的误差分数
+        
         scores = get_err_scores(test_re_list, option=option)
         if all_scores is None:
             all_scores = scores
@@ -78,7 +78,7 @@ def get_test_err_scores(test_result, option=1):
 def get_err_scores(test_res, option=1):
     test_predict, test_gt = test_res
 
-    ### 中位数、四分位间距(IQR)是数据的第75个百分点与第25个百分点之间的差
+    
     if option == 1:
         n_err_mid, n_err_iqr = get_err_median_and_iqr(test_predict, test_gt)
     elif option == 2:
@@ -235,7 +235,7 @@ def get_Test_scores_err_max(test_ae_result, option = 1, method = "max"):
 
 def get_score_PredAndAE(test_pred_result, test_ae_result,  test_generate_result, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3):
     print('=========================** Option: {} **============================\n'.format(str(option)))
-    ### 得到测试、验证数据集对应的异常分数
+    
     test_pred_scores, test_ae_scores, test_generate_scores = 0, 0, 0
     if alpha > 0:
         test_pred_scores = get_Test_scores_err_max(test_pred_result, option=option, method = method)
@@ -265,7 +265,7 @@ def get_topk_err(test_scores, topk = 3):
 def get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, search_steps=500):
 
     test_scores,total_topk_err_scores = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
-                                       method=method, alpha=alpha, beta=beta, gamma=gamma)
+                                    method=method, alpha=alpha, beta=beta, gamma=gamma)
 
     ### Find the best-f1 score by searching best `threshold` in [`start`, `end`)
     # get best f1
@@ -285,21 +285,7 @@ def get_final_result(test_pred_results, test_ae_results,  test_generate_results,
     }
     return info,test_scores,predict
 
-'''
-***************************************************************************
-evaluate methods for single time slot prediction and non-overlapping window and 重叠窗口重构问题中取最后一个时间段的重构值
-'''
 
-'''
-#当原始数据为 (T, t, N, d) 的shape时
-pred = np.sum(pred, axis=-1)
-truth = np.sum(truth, axis=-1)#(T, t, N)
-
-pf = pred.flatten() 
-tf = truth.flatten()
-mean = np.mean(np.abs(pf-tf))
-std = np.std(np.abs(pf-tf))
-'''
 mean = np.inf 
 std = np.inf
 
@@ -320,12 +306,7 @@ def get_threshold_from_traindata_pr(Y_predict, Y_train, k, scaler=False):
     return maxvalue[:k]
 
 def get_threshold_from_traindata_pr_sumk(Y_predict, Y_train, k1, k2, scaler=False):
-    """
-    在训练集中,对于每个时段的预测输出和真实值,取前topk1大的指标误差之和,作为该时段的预测误差,再取topk2大的误差时段作为阈值候选
-    input: predict output, true value
-    args: k1, k2
-    returns: max thresholds ∈ [k2]
-    """
+    
     if scaler:
         Y_predict = (Y_predict - mean) / std
         Y_train = (Y_train - mean) / std
@@ -337,17 +318,14 @@ def get_threshold_from_traindata_pr_sumk(Y_predict, Y_train, k1, k2, scaler=Fals
     maxvalue = np.sort(maxvalue)[::-1]
     return maxvalue[:k2]
     
-def get_error_list_pr(Y_true, Y_predict, threshold, k, scaler=False):#基于预测误差的标签和根因定位获取
-    #对于不重叠窗口，将其先reshape成（t,d)格式
-    #参数k代表考虑对全部d个指标，考虑到topk个指标的误差
-    #Y_true = Y_true.reshape(-1, features)
-    #Y_predict = Y_predict.reshape(-1, features)
+def get_error_list_pr(Y_true, Y_predict, threshold, k, scaler=False):
+    
     if scaler:
         Y_predict = (Y_predict - mean) / std
         Y_true = (Y_true - mean) / std
         
-    pred = []#标签
-    indexs = []#根因
+    pred = []
+    indexs = []
     if k == 1:
         for x, y in zip(Y_true, Y_predict):
             if np.max(np.abs(x - y)) > threshold:
@@ -371,13 +349,6 @@ def get_error_list_pr(Y_true, Y_predict, threshold, k, scaler=False):#基于预�
     return pred, indexs   
     
 def get_topk_errors_from_label_pr(labels, predictions, true_values, k):
-    '''
-    根据异常标签定位到对应的预测输出中,找到和真实值差距topk的指标
-    input: 标签， 预测输出， 真实值 或 标签， 重构输出， 真实值
-    (若重构目标为整个序列而不是序列的末位时段则需先对重构输出的各时间段求sum, 或者直接求出各指标对应的时间窗口的l2_loss(重构值,真实值))
-    input shape:(N), (N,d), (N,d)
-    return: list[[位置1, [topk根因], [topk误差]], ..., [位置n, [topk根因], [topk误差]]]
-    '''
     output = []
     for i in range(len(labels)):
         if labels[i] == 1:
@@ -391,14 +362,6 @@ def get_topk_errors_from_label_pr(labels, predictions, true_values, k):
     return output
 
 def get_hitrate_errors_from_label_pr(labels, index_labels, predictions, true_values, hitrate):
-    '''
-    根据异常标签定位到对应的预测输出中,找到和真实值差距(hitrate * 真实根因指标）的指标
-    input: 标签， 真实指标（T, n)，预测输出， 真实值 或 标签， 真实指标， 重构输出， 真实值
-            hitrate = 1、1.5 ...
-    (在重叠窗口的情况下，若重构目标为整个序列而不是序列的末位时段则需先对重构输出的各时间段求sum, 或者直接求出各指标对应的时间窗口的l2_loss(重构值,真实值))
-    input shape:(N), (N,d), (N,d)
-    return: list[[位置1, [topk根因], [topk误差]], ..., [位置n, [topk根因], [topk误差]]]
-    '''
     output = []
     for i in range(len(labels)):
         if labels[i] == 1:
@@ -462,7 +425,7 @@ def get_score(gt, pred):
     return accuracy, precision, recall, f_score
 
 
-def bf_search_pr(y_pred, y_test, label, start, end, step_num, k, display_freq=1, verbose=True):#基于预测误差的best score搜索
+def bf_search_pr(y_pred, y_test, label, start, end, step_num, k, display_freq=1, verbose=True):
     """
     Find the best-f1 score by searching best `threshold` in [`start`, `end`).
     Args:
@@ -473,8 +436,6 @@ def bf_search_pr(y_pred, y_test, label, start, end, step_num, k, display_freq=1,
         list: list for results
         float: the `threshold` for best-f1 and best-f1
     values:
-        start: 0.5*训练集误差阈值
-        end: 1.5*训练集误差阈值
         step_num: search steps
         k: get thresholds and reasons from topk instances
     """
@@ -521,108 +482,3 @@ def get_results(y_pred, y_test, label, start, end, step_num, k):
     }
     return info, best_pred_labels
 
-'''
-***********************************************************************************
-evaluate methods under overlapping window for multi-steps prediction and reconstruction etc.
-'''
-'''
-def get_anomaly_scores_seq(pred, truth, extra_dim=True, scaler=True, topkindexs=3):
-    
-    input: pred (T, t, N, d) truth (T, t, N, d),  when extra_dim=False pred (T, t, d) truth (T, t, d)
-    output: anomaly scores (T) index(根因) (T, k) 
-    (if extra_dim = True 将节点内各指标预测值与真实值的差异加和到节点上)，然后找到时间窗口中节点差异和最大的时段，作为异常时段，找到其中最大的节点差异，作为异常分数
-    
-    
-    if extra_dim:
-        pred = np.sum(pred, axis=-1)
-        truth = np.sum(truth, axis=-1)#（T, t, N)
-        
-    pf = pred.flatten() 
-    tf = truth.flatten()
-    mean = np.mean(np.abs(pf-tf))
-    std = np.std(np.abs(pf-tf))
-    
-    scores = []
-    indexs = []
-    
-    for x, y in zip(pred, truth):
-        node_error = np.abs(x-y)#(t, N)
-        
-        slot_error = np.sum(node_error, axis=-1)#(t)
-        targ_slot = np.argmax(slot_error)
-        targ_nodes = node_error[targ_slot]#(N)
-        
-        if scaler:
-            targ_nodes = (targ_nodes - mean) / std
-            
-        scores.append(np.max(targ_nodes))
-        #scores.append(np.sum(heapq.nlargest(topkindexs, targ_nodes)))#取前k大的节点误差之和作为异常得分
-        
-        targ_nodes = list(targ_nodes)
-        k_large_index = list(map(targ_nodes.index, heapq.nlargest(topkindexs, targ_nodes)))#找到误差前k大的节点作为根因
-        indexs.append(k_large_index)
-        
-    return scores, indexs
-
-def get_topk_scores_as_thresholds_from_train_seq(X_pred, X_train, k, extra_dim=True, scaler=True):#从训练集中获取topk误差作为阈值
-    scores, _ = get_anomaly_scores_seq(X_pred, X_train, extra_dim, scaler, 1)
-    return np.sort(scores)[::-1][:k]
-
-def get_labels_and_indexs_seq(pred, truth, k, threshold, extra_dim=True, scaler=True):#根据阈值获取标签和根因
-    scores, indexs = get_anomaly_scores_seq(pred, truth, extra_dim, scaler, k)
-    labels = []
-    reasons = []
-    for i,j in zip(scores, indexs):
-        if i > threshold:
-            labels.append(1)
-            reasons.append(j)
-        else:
-            labels.append(0)
-            reasons.append(None)
-    return labels, reasons
-
-def get_topk_errors_from_label_seq()
-
-def bf_search_seq(y_pred, y_test, label, start, end=None, step_num=10, k=1, display_freq=1, verbose=True):#基于预测误差的best score搜索
-    """
-    Find the best-f1 score by searching best `threshold` in [`start`, `end`).
-    Args:
-        matrix: y_pred and y_test
-        list: true label
-    Returns:
-        list: list for results
-        float: the `threshold` for best-f1 and best-f1
-    values:
-        start: 0.5*训练集误差阈值
-        end: 1.5*训练集误差阈值
-    """
-    if step_num is None or end is None:
-        end = start
-        step_num = 1
-        
-    search_step, search_range, search_lower_bound = step_num, end - start, start
-    
-    if verbose:
-        print("search range: ", search_lower_bound, search_lower_bound + search_range)
-        
-    threshold = search_lower_bound
-    best_score = 0
-    best_threshold = 0
-    
-    for i in range(search_step):
-        threshold += search_range / float(search_step)
-        pred, _ = get_error_list_pr(y_test, y_pred, threshold, k)
-        gt, pred = point_adjustment(pred, label)
-        accuracy, precision, recall, f_score = get_score(gt, pred)
-        print("threshold=: " + str(threshold))
-        
-        if f_score > best_score:
-            best_score = f_score
-            best_threshold = threshold
-            print("best_threshold = : " + str(best_threshold) + ", best_socre = : " + str(best_score))
-            
-    best_pred, _ = get_error_list_pr(y_test, y_pred, best_threshold, k)
-    _, best_pred_labels = point_adjustment(best_pred, label)
-    
-    return best_score, best_threshold, best_pred_labels
-'''

@@ -60,10 +60,10 @@ def get_test_err_scores(test_result, option=1):
     all_scores = None
     feature_num = np_test_result.shape[-1]
 
-    ## 每个维度平滑后的误差分数：测试、验证
+    
     for i in range(feature_num):
         test_re_list = np_test_result[:2, :, i]
-        ### 测试数据：标准化并平滑后的误差分数
+        
         scores = get_err_scores(test_re_list, option=option)
         if all_scores is None:
             all_scores = scores
@@ -76,7 +76,7 @@ def get_test_err_scores(test_result, option=1):
 def get_err_scores(test_res, option=1):
     test_predict, test_gt = test_res
     
-    ### 中位数、四分位间距(IQR)是数据的第75个百分点与第25个百分点之间的差
+    
     if option == 1:
         n_err_mid, n_err_iqr = get_err_median_and_iqr(test_predict, test_gt)
     elif option == 2:

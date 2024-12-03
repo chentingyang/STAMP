@@ -460,36 +460,8 @@ def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_
 
     return train_loader, val_loader, min_max_scaler
 
-def save_data_to_unsupervise(test_filename):#向无监督框架中传数据，这部分数据是有标签的，所以从测试集里面选
+def save_data_to_unsupervise(test_filename):
     attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=None, training=False)  # , nrows=1000)
     np.savez("/home/chenty/STAT-AD/data/WADI/test_data_wadi.npz", a=attack, b=labels)
 
 
-if __name__ == '__main__':
-    '''
-    data_dir = r"G:\gitClone\papers\时序异常检测\gitOtherClone\ourModel\data\WADI"
-
-    train_filename = data_dir + "/normal.csv"
-    test_filename = data_dir + "/attack.csv"
-
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2(train_filename, test_filename,
-                                                                                    device="cpu", window_size=12,
-                                                                                    val_ratio=0.2, batch_size=64,
-                                                                                    is_down_sample=True, down_len=10)
-    '''
-    # normal, min_max_scaler = preprocessTrainingData(train_filename, sep=None, min_max_scaler=None, training=True)
-    # attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=None, training=True)
-    # print(normal.shape)
-    # print(attack.shape)
-    # print(normal[:2])
-    # print(attack[:2])
-
-    # df = pd.read_csv(train_filename)
-    # print(df.shape,df.head())
-    # print(df.columns)
-    #
-    # df = pd.read_csv(test_filename)
-    # print(df.shape, df.head())
-    # print(df.columns)
-    file_path = '/home/chenty/STAT-AD/data/WADI' + "/attack_labelled.csv"
-    save_data_to_unsupervise(file_path)
