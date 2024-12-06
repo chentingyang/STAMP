@@ -74,8 +74,11 @@ check the saved model weights in '/expe'
 3.3 Evaluation
 
 python test.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+
 or python test.py --down_len 100 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
+
 or python test.py --down_len 100 --data WADI --nnodes 127 --window_size 15 --n_pred 3 --test_alpha 0.1 --test_beta 0.1 --test_gamma 0.8
+
 or python test.py --down_len 1 --data MSL --nnodes 55 --window_size 15 --n_pred 3 --test_alpha 0.1 --test_beta 0.8 --test_gamma 0.1
 
 ## 4. Unsupervised Detecting
@@ -83,6 +86,7 @@ or python test.py --down_len 1 --data MSL --nnodes 55 --window_size 15 --n_pred 
 4.1 Get Model-Derived information
 
 python get_model_information.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4
+
 or python get_model_information.py --down_len 50 --epoch 10 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
 
 4.2 
@@ -95,11 +99,13 @@ python /unsupervise/Screening.py
 4.4 Run STAMP
 
 python run_unsup.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
+
 or python run_unsup.py --down_len 50 --epoch 10 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
 
 4.5 Evaluation
 
 python test_unsup.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+
 or python test_unsup.py --down_len 50 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
 
 
