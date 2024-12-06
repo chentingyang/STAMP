@@ -64,7 +64,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 3.1 Run STAMP
 
 python run.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
-or python run.py --down_len 100 --epoch 10 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
+or python run.py --down_len 100 --epoch 30 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
 or python run.py --down_len 100 --epoch 20 --data WADI --nnodes 127 --window_size 15 --n_pred 3
 or python run.py --down_len 1 --epoch 20 --data MSL --nnodes 55 --window_size 15 --n_pred 3
 
@@ -100,7 +100,7 @@ python /unsupervise/Screening.py
 
 python run_unsup.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
 
-or python run_unsup.py --down_len 50 --epoch 10 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
+or python run_unsup.py --down_len 50 --epoch 30 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
 
 4.5 Evaluation
 
