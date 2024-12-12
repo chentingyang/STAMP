@@ -6,6 +6,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 
 1.1 SWaT and WADI
 - train and test data in '.csv' with the last column as labels (0 for normal and 1 for abnormal)
+- we adopt the data version of SWaT with 45 features
 
 1.2 SMD and MSL
 - train and test data in '..._train.pkl' and '..._test.pkl' formed as arrays with the shape (samples, features), for example: 'machine-1-1_train.pkl' or 'MSL_train.pkl'
