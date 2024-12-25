@@ -13,7 +13,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 - test labels also in '...test_label.pkl formed as arrays with the shape (samples,)
 
 1.3 Unsupervised Datasets
-- the train and test data should be concatenated together and saved in '.....npz', where label 'a' are samples with the shape (samples, features) and label 'b' are labels with the shape (samples,), you can refer to '/data/unsupervised_data/test_data_smd_unsup.npz'
+- the training and test data should be concatenated together and saved in '/.../.npz', where label 'a' are x-samples with the shape (samples, features) and label 'b' are y-samples with the shape (samples,), you can refer to '/data/unsupervised_data/test_data_smd_unsup.npz'
 
 1.4 Your Datasets
 - you can use '/lib/dataloader_...' according to your data format or create new dataloaders
@@ -38,7 +38,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 2.3 Attention
 - embed_size: embedding size
 - num_heads: number of attention heads
-- is_conv: while True, FFN use Linear; else, FFN use Conv1D
+- is_conv: while True, the Feed-Foward Network(FFN) adopts Linear layers; else, FFN will adopt Conv1D layers
  
 2.4 AE
 - latent_size：dimension of L-space
@@ -46,9 +46,9 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 
 2.5 Training
 
-- is_down_sample：whether performing down-sampling to the original samples
+- is_down_sample：perform down-sampling to the original samples or not
 - down_len：down-sampling ratio
-- is_mas：whether performing a moving average operation by sub-windows to extend channel
+- is_mas：perform a moving average operation by sub-windows to extend channel or not
 
 2.6 Testing
 - test_alpha：weight of prediction error
@@ -56,7 +56,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 - test_gamma：weight of adversarial error
 
 2.7 params in get_final_result()
-- topk: number of features to calculate the anomaly score
+- topk: number of features of calculating the anomaly score
 - option: set to 2
 - method: ['sum', 'max', 'mean'], types of aggragation operators
 
