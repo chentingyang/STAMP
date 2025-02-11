@@ -161,7 +161,6 @@ def load_data2(dataset, group_name, device = "gpu", window_size = 12, val_ratio 
     print("attack: ", attack.shape)
     print("labels: ", labels.shape)
     
-    np.savez("/home/chenty/STAT-AD/data/SMD/test_data_smd_unsup.npz", a=attack, b=labels)
 
     ### Add Moving Average (MA)
     window_sizes = [3,5,10,20]
