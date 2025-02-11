@@ -183,4 +183,4 @@ pred_model.to(DEVICE)
 target_num = args.nnodes
 sort_graph_weight_out, sort_graph_weight_in = get_graph_weight(pred_model, args.nnodes, target_num)
 sort_score_weight = get_score_weight(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 2, method="max", alpha =args.test_alpha, beta=args.test_beta, gamma = args.test_gamma, target_num=target_num)
-np.savez('/home/chenty/STAT-AD/weights/node_weights_SMD_unsup_train_STAMP.npz', a=sort_graph_weight_out, b=sort_graph_weight_in, c=sort_score_weight)
+np.savez('/weights/node_weights_SMD_unsup_train_STAMP.npz', a=sort_graph_weight_out, b=sort_graph_weight_in, c=sort_score_weight)
