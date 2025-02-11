@@ -91,7 +91,7 @@ base_dir = os.getcwd()
 
 
 
-smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/test_data_smd_unsup.npz")
+smd_unsup_data = np.load(".../test_data_smd_unsup.npz")
 attack = smd_unsup_data['a']
 labels = smd_unsup_data['b']
 attack_train = attack[:15000]
