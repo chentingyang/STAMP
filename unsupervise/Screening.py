@@ -153,18 +153,18 @@ parameter = [29, 13, 21]
 trainfea_out = X_full[:, sort_graph_weight_out[:parameter[0]]]
 # put the screening method below 
 labels_out = IForest(random_state=33, max_features=parameter[0], n_estimators= 100, contamination=0.1).fit_predict(trainfea_out)
-np.savez("/home/chenty/STAT-AD/data/SMD/selected_data/Iforest/result_method1", a=X_full, b=labels_out, c=X_val, d=Y_val)
+np.savez("data/unsupervised_data/SMD/selected_data/Iforest/result_method1", a=X_full, b=labels_out, c=X_val, d=Y_val)
 
 
 trainfea_in = X_full[:, sort_graph_weight_in[:parameter[1]]]   
 # put the screening method below 
 labels_in = IForest(random_state=33, max_features=parameter[1], n_estimators= 100, contamination=0.1).fit_predict(trainfea_in)
-np.savez("/home/chenty/STAT-AD/data/SMD/selected_data/Iforest/result_method2", a=X_full, b=labels_in, c=X_val, d=Y_val)
+np.savez("data/unsupervised_data/SMD/selected_data/Iforest/result_method2", a=X_full, b=labels_in, c=X_val, d=Y_val)
 
 
 trainfea_score = X_full[:, sort_score_weight[:parameter[2]]]  
 # put the screening method below  
 labels_score = IForest(random_state=33, max_features=parameter[2], n_estimators= 100, contamination=0.1).fit_predict(trainfea_score)
-np.savez("/home/chenty/STAT-AD/data/SMD/selected_data/Iforest/result_method3", a=X_full, b=labels_score, c=X_val, d=Y_val)
+np.savez("data/unsupervised_data/SMD/selected_data/Iforest/result_method3", a=X_full, b=labels_score, c=X_val, d=Y_val)
 
 
