@@ -88,7 +88,26 @@ DEVICE = get_default_device()
 
 base_dir = os.getcwd()
 
+'''
+if train on the initial unsupervised training set:
 
+smd_unsup_data = np.load("/data/unsupervised_data/SMD/test_data_smd_unsup.npz")
+attack = smd_unsup_data['a']
+labels = smd_unsup_data['b']
+attack_full = attack[:15000]
+label_full = labels[:15000]
+attack_test = attack[15000:]
+label_test = labels[15000:]
+
+train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data3(attack_full, attack_test, label_test,
+                                                                                     device=DEVICE,
+                                                                                     window_size=args.window_size,
+                                                                                     val_ratio=0.05,
+                                                                                     batch_size=args.batch_size,
+                                                                                     is_down_sample=args.is_down_sample,
+                                                                                     down_len=args.down_len)
+
+'''
 
 smd_unsup_data = np.load("...npz")
 attack_train = smd_unsup_data['a']
