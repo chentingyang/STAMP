@@ -91,7 +91,7 @@ args.device = DEVICE
 
 base_dir = os.getcwd()
 
-smd_unsup_data = np.load("/home/chenty/STAT-AD/data/SMD/selected_data//Iforest/result_method1.npz")
+smd_unsup_data = np.load("...npz")
 attack_train = smd_unsup_data['a']
 train_labels = smd_unsup_data['b']
 attack_test = smd_unsup_data['c']
