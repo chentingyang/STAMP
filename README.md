@@ -65,12 +65,15 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 3.1 Train STAMP
 
 python run.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 15 --n_pred 3
+
 or python run.py --down_len 100 --epoch 30 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
+
 or python run.py --down_len 100 --epoch 20 --data WADI --nnodes 127 --window_size 15 --n_pred 3
+
 or python run.py --down_len 1 --epoch 20 --data MSL --nnodes 55 --window_size 15 --n_pred 3
 
 3.2 
-check the saved model weights in '/expe'
+Check the saved model weights in '/expe'
 
 3.3 Evaluation
 
@@ -91,7 +94,7 @@ python run_unsup.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --window_size 
 or python run_unsup.py --down_len 50 --epoch 30 --data SWaT --nnodes 45 --window_size 15 --n_pred 3
 
 4.2 
-check the saved model weights in '/expe'
+Check the saved model weights in '/expe'
 
 4.3 Get Model-Derived information
 
@@ -100,14 +103,14 @@ python get_model_information.py --down_len 1 --epoch 5 --data SMD --nnodes 38 --
 or python get_model_information.py --down_len 50 --epoch 10 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
 
 4.5 
-check the saved model information in '/weights'
+Check the saved model information in '/weights'
 
 4.6 Screening Based on Model Information
 
 python /unsupervise/Screening.py
 
 4.7 
-check the saved training sets in 'data/unsupervised_data/'
+Check the saved training sets in 'data/unsupervised_data/'
 
 4.8 Train STAMP on screened training sets
 
