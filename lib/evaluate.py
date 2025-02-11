@@ -360,15 +360,16 @@ def get_topk_err(test_scores, topk = 3):
 
 
 def get_final_result_POT(test_pred_results, test_ae_results, test_generate_results, train_pred_results, train_ae_results, train_generate_results, 
-                        y_test_labels, q=1e-4, level=0.9998, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, search_steps=500):
+                        y_test_labels, q=1e-4, level=0.9978, topk = 1, option = 1, method="max", alpha = 0.4, beta = 0.3, gamma = 0.3, search_steps=500):
+    # level = 0.9978 for SWaT, 0.9999 for SMD
     
     test_scores,total_topk_err_scores_test = get_score_PredAndAE(test_pred_results, test_ae_results, test_generate_results, topk=topk, option=option,
                                     method=method, alpha=alpha, beta=beta, gamma=gamma)
     train_scores,total_topk_err_scores_train = get_score_PredAndAE(train_pred_results, train_ae_results, train_generate_results, topk=topk, option=option,
                                     method=method, alpha=alpha, beta=beta, gamma=gamma)
     
-    #info = pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test), np.array(y_test_labels), q, level)
-    info = bf_search_pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test) , np.array(y_test_labels), q=1e-4, level_range=[0.9999,1-1e-10], step_num=50)
+    info = pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test), np.array(y_test_labels), q, level)
+    #info = bf_search_pot_eval(np.array(total_topk_err_scores_train), np.array(total_topk_err_scores_test) , np.array(y_test_labels), q=1e-4, level_range=[0.9999,1-1e-10], step_num=50)
     return info
 
 def get_final_result(test_pred_results, test_ae_results,  test_generate_results, y_test_labels, topk = 1, option = 1, method="max", alpha =0.4, beta=0.3, gamma = 0.3, search_steps=500):
