@@ -155,22 +155,6 @@ start = test_y_pred.min()
 end = test_y_pred.max()
 
 
-print("================= Find best f1 from score: alpha * loss1 + beta * loss2 + gamma * loss3 ... =================")
-t, th, predict = bf_search(np.array(test_y_pred), np.array(y_test_labels), start=start, end=end, step_num=args.search_steps, display_freq=50)
-info = {
-    'best-f1': t[0],
-    'precision': t[1],
-    'recall': t[2],
-    'TP': t[3],
-    'TN': t[4],
-    'FP': t[5],
-    'FN': t[6],
-    'latency': t[-1],
-    'threshold': th
-}
-print(info)
-print("****"*10)
-
 test_pred_results = [test_pred_list, test_gt_list]
 
 test_ae_results = [test_construct_list, test_origin_list]
