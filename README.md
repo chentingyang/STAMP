@@ -10,7 +10,7 @@ Please refer to '/lib/dataloader_...' for more details of data loading and prepr
 
 1.2 SMD and MSL
 - train and test data in '..._train.pkl' and '..._test.pkl' formed as arrays with the shape (samples, features), for example: 'machine-1-1_train.pkl' or 'MSL_train.pkl'
-- test labels also in '...test_label.pkl formed as arrays with the shape (samples,)
+- test labels also in '...test_label.pkl' formed as arrays with the shape (samples,)
 
 1.3 Unsupervised Datasets
 - the training and test data should be concatenated together and saved in '/.../.npz', where label 'a' are x-samples with the shape (samples, features) and label 'b' are y-samples with the shape (samples,), you can refer to '/data/unsupervised_data/test_data_smd_unsup.npz'
