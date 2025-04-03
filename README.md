@@ -77,7 +77,7 @@ Check the saved model weights in '/expe'
 
 3.3 Evaluation
 
-python test.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+python test.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0. --test_gamma 0.5 
 
 or python test.py --down_len 100 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
 
@@ -118,7 +118,7 @@ Please refer to 4.3 and change the training data
 
 4.9 Evaluation
 
-python test_unsup.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0.1 --test_gamma 0.4 
+python test_unsup.py --down_len 1 --data SMD --nnodes 38 --window_size 15 --n_pred 3 --test_alpha 0.5 --test_beta 0. --test_gamma 0.5 
 
 or python test_unsup.py --down_len 50 --data SWaT --nnodes 45 --window_size 15 --n_pred 3 --test_alpha 0.8 --test_beta 0.1 --test_gamma 0.1
 
