@@ -114,8 +114,6 @@ train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data
 init_seed(args.seed)
 
 channels_list = [[16,8,32],[32,8,64]]
-# channels_list = [[32,16,64],[64,16,64]]
-# channels_list = [[16,8,16],[16,8,32],[32,8,64]]
 
 AE_IN_CHANNELS = args.window_size * args.nnodes * args.in_channels
 latent_size = args.window_size * args.latent_size
