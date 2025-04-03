@@ -589,29 +589,6 @@ def save_column_to_pkl(filename, outputName):
     with open(outputName+".txt","w")as f:
         f.write(" ".join(normal.columns))
 
-def save_data_to_unsupervise(test_filename):#向无监督框架中传数据，这部分数据是有标签的，所以从测试集里面选
-    attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=None, training=False)  # , nrows=1000)
-    np.savez("/home/chenty/STAT-AD/data/SWaT/test_data_swat.npz", a=attack, b=labels)
 
-if __name__ == '__main__':
-    # Read lib
-    '''
-    data_dir = r"F:\GitHub\SGAT-AE\data\SWaT"
-
-    filename = data_dir + "/SWaT_Dataset_normal.csv"
-    outputName = "swat_columns"
-
-    save_column_to_pkl(filename,outputName)
-
-    with open(outputName+".pkl", "rb") as f:
-        data = pickle.load(f)
-    print(data)
-
-    with open(outputName+".txt","r")as f:
-        data = f.readline()
-    print(data.split(" "))
-    '''
-    file_path = '/home/chenty/STAT-AD/data/SWaT' + "/SWaT_Dataset_attack.csv"
-    save_data_to_unsupervise(file_path)
 
 
