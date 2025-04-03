@@ -145,7 +145,6 @@ class MinMaxScaler:
     def inverse_transform(self, data):
         return data * (self.max - self.min) + self.min
 
-### 多通道输入数据
 class MyDataset(torch.utils.data.Dataset):
     def __init__(self, x, mas):
         self.x = x
