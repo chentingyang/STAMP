@@ -32,7 +32,7 @@ parser.add_argument('--hidden_dim', type=int, default=16,
                     help='hidden_dim')
 parser.add_argument('--att_option', type=int, default=1, help='att_option')
 
-### GATModel
+### pred model
 parser.add_argument('--window_size', type=int, default=15,
                     help='window_size')
 parser.add_argument('--n_pred', type=int, default=3,
