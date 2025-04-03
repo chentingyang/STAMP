@@ -41,8 +41,6 @@ def load_data(train_filename, test_filename, device = "gpu", window_size = 12, v
     ## EDA - Data Pre-Processing
     normal, min_max_scaler = preprocessTrainingData(train_filename, sep=None, min_max_scaler=None, training=True)  # , nrows=1000)
     attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=min_max_scaler, training=False)  # , nrows=1000)
-    # normal: (495000, 51)
-    # attack: (449919, 51)
     normal = normal[21600:,:]
     ## down sample
     if is_down_sample:
@@ -354,7 +352,6 @@ def load_data3(normal, attack, labels, device = "gpu", window_size = 12, val_rat
 
 
 def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_ratio = 0.2, batch_size = 64, is_down_sample = False, down_len=10):
-    #接收无监督方法输出的数据和标签，筛选正常窗口，作为训练集
 
     labels = np.array(labels)
     print("attack_train: ", attack.shape)
@@ -460,8 +457,5 @@ def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_
 
     return train_loader, val_loader, min_max_scaler
 
-def save_data_to_unsupervise(test_filename):
-    attack, labels = preprocessTestingData(test_filename, sep=None, min_max_scaler=None, training=False)  # , nrows=1000)
-    np.savez("/home/chenty/STAT-AD/data/WADI/test_data_wadi.npz", a=attack, b=labels)
 
 
