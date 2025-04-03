@@ -88,16 +88,13 @@ def load_data(dataset, group_name, device = "gpu", window_size = 12, val_ratio =
     print("attack: ", attack.shape)
     print("labels: ", labels.shape)
 
-    # normal: (495000, 51)
-    # attack: (449919, 51)
-    # normal = normal[21600:,:]
     ## down sample
     if is_down_sample:
         normal = downsample(normal, down_len=down_len, is_label=False)
         attack = downsample(attack, down_len=down_len, is_label=False)
         labels = downsample(labels, down_len=down_len, is_label=True)
 
-    # ## nomalization
+    ## nomalization
     min = normal.min()##axis=0
     max = normal.max()##axis=0
     # min_max_scaler = MinMaxScaler(min, max)
@@ -111,12 +108,10 @@ def load_data(dataset, group_name, device = "gpu", window_size = 12, val_ratio =
     # windows_attack = min_max_scaler.transform(windows_attack)
 
     windows_normal = normal[np.arange(window_size)[None, :] + np.arange(normal.shape[0] - window_size + 1)[:, None]]
-    # print(windows_normal.shape)  # (494988, 12, 51)
 
     windows_attack = attack[np.arange(window_size)[None, :] + np.arange(attack.shape[0] - window_size + 1)[:, None]]
-    # print(windows_attack.shape)  # (449907, 12, 51)
 
-    ### train/val/test
+    ## train/val/test
     windows_normal_train = windows_normal[:int(np.floor((1-val_ratio) * windows_normal.shape[0]))]
     windows_normal_val = windows_normal[int(np.floor((1-val_ratio) * windows_normal.shape[0])):]
 
@@ -173,12 +168,6 @@ def load_data2(dataset, group_name, device = "gpu", window_size = 12, val_ratio 
         attack_ma = np_ma(attack, w)
         attack_mas.append(attack_ma)
 
-    # normal: (495000, 45)
-    # attack: (449919, 45)
-    # normal = normal[21600:,:]
-    # for i in range(len(window_sizes)):
-    #     normal_mas[i] = normal_mas[i][21600:,:]
-
     W = np.max(window_sizes)
     attack = attack[W:, :]
     labels = labels[W:]
@@ -209,10 +198,8 @@ def load_data2(dataset, group_name, device = "gpu", window_size = 12, val_ratio 
         attack_mas[i] = min_max_scaler.transform(attack_mas[i])
 
     windows_normal = normal[np.arange(window_size)[None, :] + np.arange(normal.shape[0] - window_size + 1)[:, None]]
-    # print(windows_normal.shape)  # (494988, 12, 51)
 
     windows_attack = attack[np.arange(window_size)[None, :] + np.arange(attack.shape[0] - window_size + 1)[:, None]]
-    # print(windows_attack.shape)  # (449907, 12, 51)
 
     for i in range(len(window_sizes)):
         normal_mas[i] = normal_mas[i][np.arange(window_size)[None, :] + np.arange(normal.shape[0] - window_size + 1)[:, None]]
@@ -222,7 +209,7 @@ def load_data2(dataset, group_name, device = "gpu", window_size = 12, val_ratio 
     windows_attack_mas = np.stack(attack_mas, axis=-1)
 
 
-    ### train/val/test
+    ## train/val/test
     windows_normal_train = windows_normal[:int(np.floor((1-val_ratio) * windows_normal.shape[0]))]
     windows_normal_val = windows_normal[int(np.floor((1-val_ratio) * windows_normal.shape[0])):]
 
@@ -312,7 +299,7 @@ def load_data3(normal, attack, labels, device = "gpu", window_size = 12, val_rat
             normal_mas[i] = downsample(normal_mas[i], down_len=down_len, is_label=False)
             attack_mas[i] = downsample(attack_mas[i], down_len=down_len, is_label=False)
 
-    # ## nomalization
+    ## nomalization
     # min = normal.min()##axis=0
     # max = normal.max()##axis=0
     # min_max_scaler = MinMaxScaler(min, max)
@@ -396,9 +383,9 @@ def load_data3(normal, attack, labels, device = "gpu", window_size = 12, val_rat
     return train_loader, val_loader, test_loader, y_test_labels, min_max_scaler
 
 def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_ratio = 0.2, batch_size = 64, is_down_sample = False, down_len=1):
-    ### 
+    ##
     # Receive samples and labels screened by unsupervised methods,  extract continuous time windows, and use them as the training set
-    ###
+    ##
 
     labels = np.array(labels)
     print("attack_train: ", attack.shape)
@@ -506,8 +493,3 @@ def load_data_unsup_train(attack, labels, device = "gpu", window_size = 12, val_
 
 
 
-if __name__ == '__main__':
-    dataset = "SMD"
-    group_name = "machine-1-1"
-
-    train_loader, val_loader, test_loader, y_test_labels, min_max_scaler = load_data2(dataset, group_name, device = "cpu", window_size = 12, val_ratio = 0.2, batch_size = 64, is_down_sample = False, down_len=10)
