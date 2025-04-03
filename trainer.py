@@ -174,7 +174,7 @@ class Trainer(object):
             ae_loss.backward()
             self.ae_optimizer.step()
 
-            # ### 对抗训练  loss1
+            ## loss1
             self.pred_optimizer.zero_grad()
             output, target, generate_batch = self.pred_model_batch(batch, training=True, mas=mas)
             pred_loss = self.pred_loss(output, target)
@@ -193,7 +193,7 @@ class Trainer(object):
             loss1.backward()
             self.pred_optimizer.step()
 
-            ### 对抗训练  loss2
+            ## loss2
             self.ae_optimizer.zero_grad()
             output1, target1, = self.ae_model_batch(batch, training=True)
             ae_loss = self.ae_loss(output1.reshape(-1, self.args.window_size, self.args.nnodes, self.args.out_channels),
@@ -271,8 +271,8 @@ class Trainer(object):
             # else:
             #     not_improved_count += 1
             #     best_state = False
-            # if val_epoch_loss - best_loss > self.args.largest_loss_diff:#验证集损失与最佳损失差异过大
-            #     break#停止训练
+            # if val_epoch_loss - best_loss > self.args.largest_loss_diff:
+            #     break
             # if self.args.early_stop:
             #     if not_improved_count == self.args.early_stop_patience:
             #         self.logger.info("Validation performance didn\'t improve for {} epochs. "
