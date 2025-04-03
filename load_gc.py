@@ -141,8 +141,6 @@ else:
 ## set seed
 init_seed(args.seed)
 
-# channels_list = [[16,8,32],[32,8,32]]
-# channels_list = [[32,16,64],[64,16,64]]
 channels_list = [[4, 2, 8], [8, 4, 8]]
 
 AE_IN_CHANNELS = args.window_size * args.nnodes * args.in_channels
@@ -150,14 +148,6 @@ latent_size = args.window_size * args.latent_size
 
 if args.pred_model in ["gat", "GAT"]:
     pred_model = STATModel(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["cnn", "CNN"]:
-    channels_list = [[16, 8, 32], [32, 8, 32]]
-    pred_model = OurCNN(args, DEVICE, args.window_size - args.n_pred, channels_list, static_feat=None)
-elif args.pred_model in ["lstm", "LSTM"]:
-    args.hidden_dim = 16
-    pred_model = OurLSTM(args, DEVICE, args.window_size - args.n_pred, hidden_dim=args.hidden_dim)
-elif args.pred_model in ["gru", "GRU"]:
-    pred_model = AGCRN(args)
 else:
     raise "model Error ..."
 # pred_model = to_device(pred_model, DEVICE)
@@ -187,7 +177,7 @@ pred_model.to(DEVICE)
 for name, param in pred_model.named_parameters():
     print(name, param.shape, param.requires_grad)
 
-### 保存图结构
+## save the graph
 idx = torch.arange(args.nnodes).to(DEVICE)
 adj = pred_model.gc(idx).detach().cpu().numpy()
 print("adj: ", adj.shape,type(adj), adj)
